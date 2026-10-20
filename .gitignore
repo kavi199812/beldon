@@ -1,0 +1,51 @@
+# Database configuration (force-added on initial commit, ignored afterwards)
+application/config/database.php
+
+# Environment & Database dumps
+.env
+*.sql
+*.sqlite
+
+# Scratch & Temporary Testing directories/files
+scratch/
+xxx/
+check_db.php
+check_holds.php
+
+# Temporary copy and backup files created during manual editing
+* - copy*.*
+* - copy*
+*-copy*.*
+*-copy*
+*-old.*
+*-old
+*._old*
+
+# CodeIgniter logs, cache, sessions
+application/cache/*
+!application/cache/index.html
+!application/cache/.htaccess
+
+application/logs/*
+!application/logs/index.html
+
+# Operating System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE / Editor folders
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Archives & Temporary files
+*.zip
+*.tar.gz
+*.rar
+*.log
+*.tmp
+_temp/

@@ -1,0 +1,211 @@
+/* ====================================================
+   POS Category Tabs + Inline Product Grid
+   ==================================================== */
+
+/* ── Layout widths ── */
+#main_part .left_item {
+    width: 45% !important;
+}
+
+#main_part .main_right {
+    width: 55% !important;
+}
+
+/* ── Critical fix: main_item_holder must stack vertically (tabs on top, grid below) ── */
+#main_part .main_right #main_item_holder {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+}
+
+/* ── Search Bar - Hidden ── */
+#product_section_left .search-category-form,
+.main_right .search-category-form {
+    display: none !important;
+}
+
+/* ── Category Tab Bar ── */
+#category_tabs_bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px 10px;
+    background: #f5f5f5;
+    border-bottom: 3px solid #8de0ba;
+    flex-shrink: 0;
+}
+
+/* ── Individual Tab ── */
+.cat-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 8px 8px 0 0;
+    background: #d4f5e9;
+    color: #2a5c45;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-bottom: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+    text-align: center;
+    white-space: nowrap;
+    min-width: 80px;
+    line-height: 1.3;
+    user-select: none;
+}
+
+.cat-tab:hover {
+    background: #a8ecd0;
+    color: #1a3d2d;
+}
+
+.cat-tab.active {
+    background: #8de0ba;
+    color: #fff;
+    border-color: #8de0ba;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.10);
+}
+
+/* ── Inline Product Grid ── */
+#inline_product_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    align-content: start;
+    gap: 8px;
+    padding: 8px;
+    padding-bottom: 16px;
+    width: 100%;
+    height: calc(100vh - 260px);
+    overflow-y: auto;
+    background: #f9f9f9;
+    box-sizing: border-box;
+}
+
+/* Custom scrollbar for product grid */
+#inline_product_grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+#inline_product_grid::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+#inline_product_grid::-webkit-scrollbar-thumb {
+    background: #8de0ba;
+    border-radius: 4px;
+}
+
+/* ── Product Cards (inline) ── */
+#inline_product_grid .single_item {
+    background: #8de0ba !important;
+    border: 2px solid transparent !important;
+    border-radius: 8px !important;
+    padding: 8px 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-height: 80px !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+    transition: transform 0.18s, box-shadow 0.18s, background 0.18s, border-color 0.18s !important;
+}
+
+#inline_product_grid .single_item:hover {
+    background: #7dd4ab !important;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2) !important;
+    transform: translateY(-2px) !important;
+    border-color: #3fad80 !important;
+}
+
+/* Hide product images inside inline grid */
+#inline_product_grid .single_item img {
+    display: none !important;
+}
+
+#inline_product_grid .single_item .item_name {
+    display: block !important;
+    width: 100% !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #1a3d2d !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.3 !important;
+    margin: 0 0 4px 0 !important;
+    padding: 0 !important;
+    max-height: 3.9em !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+
+#inline_product_grid .single_item .item_price {
+    display: block !important;
+    width: 100% !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #2a5c45 !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.15) !important;
+    padding-top: 4px !important;
+    margin-top: auto !important;
+}
+
+/* ── Empty state ── */
+#inline_product_grid .no_products_msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #888;
+    font-size: 15px;
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* ── Legacy hidden elements (kept for JS compat) ── */
+#secondary_item_holder {
+    display: none !important;
+}
+
+/* ── Variation / Modifier button sizes ── */
+.cus_pos_modal .pos__modal__body .separate__radio_field .form__field label,
+.cus_pos_modal .pos__modal__body .separate__radio_field button,
+.cus_pos_modal .pos__modal__body .separate__radio_field .btn,
+.cus_pos_modal .separate__radio_field button,
+.cus_pos_modal .separate__radio_field .btn,
+.separate__radio_field button,
+.separate__radio_field .btn,
+.cus_pos_modal .none_inner_body .cart__item__modal form .separate__radio_field .form__field label,
+.cus_pos_modal .none_inner_body .cart__item__modal form .separate__radio_field button,
+.cus_pos_modal .none_inner_body .cart__item__modal form .separate__radio_field .btn,
+.cart__item__modal .separate__radio_field button,
+.cart__item__modal .separate__radio_field .btn,
+.btn-block {
+    width: 100% !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    padding: 25px 20px !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    transition: all 0.3s !important;
+}
+
+/* Variation button grid layout */
+.cus_pos_modal .separate__radio_field,
+.cart__item__modal .separate__radio_field {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px !important;
+    margin-bottom: 15px !important;
+}
