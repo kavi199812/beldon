@@ -42,22 +42,46 @@
                                 <p id="name_err_msg"></p>
                             </div>
                         </div>
-                        <div class="col-sm-12 mb-2 col-md-3">
+                        <div class="col-sm-12 mb-2 col-md-2">
                             <div class="form-group">
                                 <label><?php echo lang('code'); ?></label>
-                                <input tabindex="6" type="text" name="code" id="code"  class="form-control"
+                                <input tabindex="2" type="text" name="code" id="code"  class="form-control"
                                     placeholder="<?php echo lang('code'); ?>" value="<?php echo escape_output($autoCode); ?>">
                             </div>
                         </div>
                         <div class="col-sm-12 mb-2 col-md-3">
                             <div class="form-group">
-                                <label><?php echo lang('category'); ?> <span class="required_star">*</span></label>
-                                <select tabindex="2" class="form-control select2 ir_w_100" id="category_id"
+                                <label>POS Category <span class="required_star">*</span></label>
+                                <select tabindex="3" class="form-control select2 ir_w_100" id="food_menu_category_id"
+                                    name="food_menu_category_id">
+                                    <option value=""><?php echo lang('select'); ?> POS Category</option>
+                                    <?php foreach ($food_menu_categories as $fmc) { ?>
+                                    <option value="<?php echo escape_output($fmc->id) ?>"
+                                        <?php echo set_select('food_menu_category_id', $fmc->id); ?>>
+                                        <?php echo escape_output($fmc->category_name) ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2 col-md-2">
+                            <div class="form-group">
+                                <label>POS Sale Price <span class="required_star">*</span></label>
+                                <input tabindex="4" type="text" name="sale_price" id="sale_price" class="form-control integerchk"
+                                    placeholder="POS Sale Price" value="<?php echo set_value('sale_price'); ?>">
+                            </div>
+                            <div class="callout callout-danger my-2 error-msg sale_price_err_msg_contnr" style="display:none;">
+                                <p id="sale_price_err_msg"></p>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 mb-2 col-md-2">
+                            <div class="form-group">
+                                <label>Stock Category <span class="required_star">*</span></label>
+                                <select tabindex="5" class="form-control select2 ir_w_100" id="category_id"
                                     name="category_id">
                                     <option value=""><?php echo lang('select'); ?></option>
                                     <?php foreach ($categories as $ctry) { ?>
                                     <option value="<?php echo escape_output($ctry->id) ?>"
-                                        <?php echo set_select('category_id', $ctry->id); ?>>
+                                        <?php echo set_select('category_id', $ctry->id, ($ctry->id == 13 ? TRUE : FALSE)); ?>>
                                         <?php echo escape_output($ctry->category_name) ?></option>
                                     <?php } ?>
                                 </select>
@@ -70,9 +94,7 @@
                             <div class="callout callout-danger my-2 error-msg category_err_msg_contnr">
                                 <p id="category_id_err_msg"></p>
                             </div>
-
                         </div>
-
                     </div>
 
                     <div class="row">
@@ -187,7 +209,7 @@
                                         <option value=""><?php echo lang('select'); ?></option>
                                         <?php foreach ($units as $unts) { ?>
                                             <option value="<?php echo escape_output($unts->id) ?>"
-                                                <?php echo set_select('consumption_unit_id', $unts->id); ?>><?php echo escape_output($unts->unit_name) ?>
+                                                <?php echo set_select('consumption_unit_id', $unts->id, ($unts->id == 6 ? TRUE : FALSE)); ?>><?php echo escape_output($unts->unit_name) ?>
                                             </option>
                                         <?php } ?>
                                     </select>
@@ -211,7 +233,7 @@
                                 <label><?php echo lang('purchase_price'); ?> <span
                                             class="required_star">*</span></label>
                                 <div class="d-flex">
-                                    <input type="text" class="form-control" readonly name="purchase_price"  placeholder="<?php echo lang('purchase_price'); ?>" id="grand_total_cost">
+                                    <input type="text" class="form-control" readonly name="purchase_price"  placeholder="<?php echo lang('purchase_price'); ?>" id="grand_total_cost" value="0">
                                     <div class="tooltip_custom">
                                         <i class="fa fa-question fa-2x form_question" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php echo lang('tooltip_txt_25'); ?>"></i>
                                     </div>
@@ -232,7 +254,7 @@
                                     <input tabindex="4" type="text" name="consumption_unit_cost" id="consumption_unit_cost"
                                            class="form-control integerchk" readonly
                                            placeholder="<?php echo lang('consumption_unit_cost'); ?>"
-                                           value="<?php echo set_value('consumption_unit_cost'); ?>">
+                                           value="<?php echo set_value('consumption_unit_cost', 0); ?>">
 
                                     <div class="tooltip_custom">
                                         <i class="fa fa-question fa-2x form_question" data-bs-toggle="tooltip" data-bs-placement="top" title="<?php echo lang('ing_tooltip_3'); ?>"></i>
@@ -250,7 +272,7 @@
                                 <label><?php echo lang('alert_qty'); ?> <span class="required_star">*</span></label>
                                 <input tabindex="5" type="text" name="alert_quantity" class="form-control integerchk"
                                        placeholder="<?php echo lang('alert_qty'); ?>"
-                                       value="<?php echo set_value('alert_quantity'); ?>">
+                                       value="<?php echo set_value('alert_quantity', 10); ?>">
                             </div>
                             <?php if (form_error('alert_quantity')) { ?>
                                 <div class="callout callout-danger my-2">

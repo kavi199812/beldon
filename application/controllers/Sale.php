@@ -460,6 +460,15 @@ class Sale extends Cl_Controller {
         $data['only_modifiers'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_modifiers');
         $data['kitchens'] = $this->Common_model->getAllByOutletId($outlet_id, "tbl_kitchens");
         $data['notifications'] = $this->get_new_notification();
+        $data['suppliers'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_suppliers');
+        $data['pre_made_ingredients'] = $this->db->select('tbl_ingredients.id, tbl_ingredients.name, tbl_ingredients.code, tbl_ingredients.purchase_price, tbl_units.unit_name')
+            ->from('tbl_ingredients')
+            ->join('tbl_units', 'tbl_units.id = tbl_ingredients.unit_id', 'left')
+            ->where('tbl_ingredients.company_id', $company_id)
+            ->where('tbl_ingredients.del_status', 'Live')
+            ->where('tbl_ingredients.ing_type', 'Pre-made Item')
+            ->order_by('tbl_ingredients.name', 'ASC')
+            ->get()->result();
         $this->load->view('sale/POS/main_screen', $data);
     }
      /**

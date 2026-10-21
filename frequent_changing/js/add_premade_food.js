@@ -259,53 +259,37 @@ $(function() {
     });
     // Validate form
     $(document).on('submit', '#food_menu_form', function() {
-        let name = $("#name").val();
+        let name = $.trim($("#name").val());
         let category_id = $("#category_id").val();
-        let veg_item = $("#veg_item").val();
-        let beverage_item = $("#beverage_item").val();
-        let bar_item = $("#bar_item").val();
-        let description = $("#description").val();
-        let sale_price = $("#sale_price").val();
-        let ingredientCount = $("#form-table tbody tr").length;
+        let food_menu_category_id = $("#food_menu_category_id").val();
+        let sale_price = $.trim($("#sale_price").val());
         let error = false;
 
+        $(".name_err_msg_contnr").hide();
+        $(".category_err_msg_contnr").hide();
+        $(".sale_price_err_msg_contnr").hide();
+
         if (name == "") {
-            $("#name_err_msg").text(name_field_required);
+            $("#name_err_msg").text(name_field_required || "The Name field is required.");
             $(".name_err_msg_contnr").show(200);
             error = true;
         }
-        if (category_id == "") {
-            $("#category_id_err_msg").text(category_field_required);
+        if (!category_id) {
+            $("#category_id_err_msg").text(category_field_required || "The Stock Category field is required.");
             $(".category_err_msg_contnr").show(200);
             error = true;
         }
-        if (veg_item == "") {
-            $("#veg_item_err_msg").text(veg_item_field_required);
-            $(".veg_item_err_msg_contnr").show(200);
-            error = true;
-        }
-        if (beverage_item == "") {
-            $("#beverage_item_err_msg").text(beverage_item_field_required);
-            $(".beverage_item_err_msg_contnr").show(200);
-            error = true;
-        }
-        if (bar_item == "") {
-            $("#bar_item_err_msg").text(bar_item_field_required);
-            $(".bar_item_err_msg_contnr").show(200);
-            error = true;
-        }
-
-        if (description.length > 200) {
-            $("#description_err_msg").text(description_field_can_not_exceed);
-            $(".description_err_msg_contnr").show(200);
-            error = true;
-        }
-
-        if (sale_price == "") {
-            $("#sale_price_err_msg").text(sale_price_field_required);
+        if (!sale_price || isNaN(sale_price)) {
+            $("#sale_price_err_msg").text(sale_price_field_required || "The POS Sale Price field is required.");
             $(".sale_price_err_msg_contnr").show(200);
             error = true;
         }
+
+        // Auto-fill hidden purchase_price if left blank so backend validation succeeds
+        if (!$("#grand_total_cost").val()) {
+            $("#grand_total_cost").val('0');
+        }
+
         if (error == true) {
             return false;
         }

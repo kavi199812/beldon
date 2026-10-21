@@ -442,20 +442,35 @@ class Report extends Cl_Controller {
     public function saleReportByDate() {
         $data = array();
         $company_id = $this->session->userdata('company_id');
+        $outlet_id = $this->session->userdata('outlet_id');
+        $start_date = date('Y-m-d');
+        $end_date = date('Y-m-d');
+        $user_id = '';
+
         if (htmlspecialcharscustom($this->input->post('submit'))) {
-            $outlet_id  = isset($_POST['outlet_id']) && $_POST['outlet_id']?$_POST['outlet_id']:'';
-            if(!$outlet_id){
-                $outlet_id = $this->session->userdata('outlet_id');
+            $posted_outlet = isset($_POST['outlet_id']) && $_POST['outlet_id'] ? $_POST['outlet_id'] : '';
+            if ($posted_outlet) {
+                $outlet_id = $posted_outlet;
             }
-            $data['outlet_id'] = $outlet_id;
-            $start_date =htmlspecialcharscustom($this->input->post($this->security->xss_clean('startDate')));
-            $data['start_date'] = $start_date;
-            $end_date =htmlspecialcharscustom($this->input->post($this->security->xss_clean('endDate')));
-            $data['end_date'] = $end_date;
-            $user_id =htmlspecialcharscustom($this->input->post($this->security->xss_clean('user_id')));
-            $data['user_id'] = $user_id;
-            $data['saleReportByDate'] = $this->Report_model->saleReportByDate($start_date, $end_date, $user_id,$outlet_id);
+            $start_date_raw = $this->input->post($this->security->xss_clean('startDate'));
+            $end_date_raw = $this->input->post($this->security->xss_clean('endDate'));
+            $start_date = $start_date_raw ? date('Y-m-d', strtotime($start_date_raw)) : '';
+            $end_date = $end_date_raw ? date('Y-m-d', strtotime($end_date_raw)) : '';
+            $user_id = htmlspecialcharscustom($this->input->post($this->security->xss_clean('user_id')));
+
+            // Single date or date range handling:
+            if (!empty($start_date) && empty($end_date)) {
+                $end_date = $start_date;
+            } elseif (empty($start_date) && !empty($end_date)) {
+                $start_date = $end_date;
+            }
         }
+
+        $data['outlet_id'] = $outlet_id;
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
+        $data['user_id'] = $user_id;
+        $data['saleReportByDate'] = $this->Report_model->saleReportByDate($start_date, $end_date, $user_id, $outlet_id);
         $data['users'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_users');
         $data['main_content'] = $this->load->view('report/saleReportByDate', $data, TRUE);
         $this->load->view('userHome', $data);
@@ -1237,6 +1252,8 @@ class Report extends Cl_Controller {
 
         $category_id = '';
         $ing_type = '';
+        $start_date = '';
+        $end_date = '';
 
         if (htmlspecialcharscustom($this->input->post('submit'))) {
             $posted_outlet = isset($_POST['outlet_id']) && $_POST['outlet_id'] ? $_POST['outlet_id'] : '';
@@ -1245,13 +1262,32 @@ class Report extends Cl_Controller {
             }
             $category_id = htmlspecialcharscustom($this->input->post($this->security->xss_clean('category_id')));
             $ing_type = htmlspecialcharscustom($this->input->post($this->security->xss_clean('ing_type')));
+
+            $start_date_raw = $this->input->post($this->security->xss_clean('startDate'));
+            $end_date_raw = $this->input->post($this->security->xss_clean('endDate'));
+
+            if (!empty($start_date_raw)) {
+                $start_date = date('Y-m-d', strtotime($start_date_raw));
+            }
+            if (!empty($end_date_raw)) {
+                $end_date = date('Y-m-d', strtotime($end_date_raw));
+            }
+
+            // Single date or date range handling:
+            if (!empty($start_date) && empty($end_date)) {
+                $end_date = $start_date;
+            } elseif (empty($start_date) && !empty($end_date)) {
+                $start_date = $end_date;
+            }
         }
 
         $data['outlet_id'] = $outlet_id;
         $data['category_id'] = $category_id;
         $data['ing_type'] = $ing_type;
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
         $data['ingredient_categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, "tbl_ingredient_categories");
-        $data['inventory'] = $this->Inventory_model->getInventory($category_id, '', '');
+        $data['inventory'] = $this->Inventory_model->getInventory($category_id, '', '', $start_date, $end_date, $outlet_id);
         $data['main_content'] = $this->load->view('report/stockReport', $data, TRUE);
         $this->load->view('userHome', $data);
     }

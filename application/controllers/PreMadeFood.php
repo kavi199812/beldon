@@ -121,10 +121,36 @@ class PreMadeFood extends Cl_Controller {
             redirect('Outlet/outlets');
         }
         if (htmlspecialcharscustom($this->input->post('submit'))) {
+            // Apply sensible defaults for pre-made foods so optional fields don't block saving
+            if (!isset($_POST['category_id']) || empty($_POST['category_id'])) {
+                $_POST['category_id'] = 13; // Default to Bakery Items
+            }
+            if (!isset($_POST['purchase_price']) || $_POST['purchase_price'] === '') {
+                $_POST['purchase_price'] = 0;
+            }
+            if (!isset($_POST['alert_quantity']) || $_POST['alert_quantity'] === '') {
+                $_POST['alert_quantity'] = 10;
+            }
+            if (!isset($_POST['unit_type']) || empty($_POST['unit_type'])) {
+                $_POST['unit_type'] = 2;
+            }
+            if (!isset($_POST['consumption_unit_id']) || empty($_POST['consumption_unit_id'])) {
+                $_POST['consumption_unit_id'] = 6; // pcs
+            }
+            if (!isset($_POST['conversion_rate']) || empty($_POST['conversion_rate'])) {
+                $_POST['conversion_rate'] = 1;
+            }
+            if (!isset($_POST['purchase_unit_id']) || empty($_POST['purchase_unit_id'])) {
+                $_POST['purchase_unit_id'] = 6; // pcs
+            }
+            if (!isset($_POST['consumption_unit_cost']) || empty($_POST['consumption_unit_cost'])) {
+                $_POST['consumption_unit_cost'] = 0;
+            }
+
             $this->form_validation->set_rules('name', lang('name'), 'required|max_length[50]');
             $this->form_validation->set_rules('category_id', lang('category'), 'required');
-            $this->form_validation->set_rules('purchase_price', lang('purchase_price'), 'required|numeric|max_length[15]');
-            $this->form_validation->set_rules('alert_quantity',lang('alert_quantity'), 'required|numeric|max_length[15]');
+            $this->form_validation->set_rules('purchase_price', lang('purchase_price'), 'numeric|max_length[15]');
+            $this->form_validation->set_rules('alert_quantity',lang('alert_quantity'), 'numeric|max_length[15]');
             $this->form_validation->set_rules('code',lang('unit'), 'required');
             $unit_type = $_POST['unit_type'];
             $this->form_validation->set_rules('consumption_unit_id',lang('unit'), 'required');
@@ -146,18 +172,91 @@ class PreMadeFood extends Cl_Controller {
                 $fmc_info['conversion_rate'] =htmlspecialcharscustom($this->input->post($this->security->xss_clean('conversion_rate')));
                 $fmc_info['unit_type'] =htmlspecialcharscustom($this->input->post($this->security->xss_clean('unit_type')));
                 $fmc_info['ing_type'] = "Pre-made Item";
+                $fmc_info['is_direct_food'] = 1;
                 $fmc_info['user_id'] = $this->session->userdata('user_id');
                 $fmc_info['company_id'] = $this->session->userdata('company_id');
+                $id_saved = $id;
                 if ($id == "") {
-                    $id = $this->Common_model->insertInformation($fmc_info, "tbl_ingredients");
-                    $this->saveFoodMenusIngredients($_POST['ingredient_id'], $id, 'tbl_premade_ingredients');
+                    $id_saved = $this->Common_model->insertInformation($fmc_info, "tbl_ingredients");
+                    if (isset($_POST['ingredient_id']) && is_array($_POST['ingredient_id'])) {
+                        $this->saveFoodMenusIngredients($_POST['ingredient_id'], $id_saved, 'tbl_premade_ingredients');
+                    }
                     $this->session->set_flashdata('exception', lang('insertion_success'));
                 } else {
                     $this->Common_model->updateInformation($fmc_info, $id, "tbl_ingredients");
                     $this->Common_model->deletingMultipleFormData('pre_made_id', $id, 'tbl_premade_ingredients');
-                    $this->saveFoodMenusIngredients($_POST['ingredient_id'], $id, 'tbl_premade_ingredients');
+                    if (isset($_POST['ingredient_id']) && is_array($_POST['ingredient_id'])) {
+                        $this->saveFoodMenusIngredients($_POST['ingredient_id'], $id, 'tbl_premade_ingredients');
+                    }
                     $this->session->set_flashdata('exception',lang('update_success'));
                 }
+
+                // Auto-sync to POS Food Menus so it appears directly on POS screen
+                $food_menu_category_id = (int)$this->input->post('food_menu_category_id');
+                if ($food_menu_category_id <= 0) {
+                    $food_menu_category_id = 26; // Default to Short eats if not selected
+                }
+                $sale_price = (float)$this->input->post('sale_price');
+                if ($sale_price <= 0 && (float)$fmc_info['purchase_price'] > 0) {
+                    $sale_price = (float)$fmc_info['purchase_price'];
+                }
+
+                $existing_fm = $this->db->get_where('tbl_food_menus', array('code' => $fmc_info['code'], 'del_status' => 'Live'))->row();
+                if (!$existing_fm) {
+                    $existing_fm = $this->db->get_where('tbl_food_menus', array('name' => $fmc_info['name'], 'del_status' => 'Live'))->row();
+                }
+                $fm_data = array(
+                    'name' => $fmc_info['name'],
+                    'code' => $fmc_info['code'],
+                    'category_id' => $food_menu_category_id,
+                    'sale_price' => $sale_price,
+                    'sale_price_take_away' => $sale_price,
+                    'sale_price_delivery' => $sale_price,
+                    'total_cost' => $fmc_info['purchase_price'],
+                    'product_type' => 1,
+                    'user_id' => $this->session->userdata('user_id'),
+                    'company_id' => $company_id,
+                    'del_status' => 'Live'
+                );
+                if ($existing_fm) {
+                    $this->Common_model->updateInformation($fm_data, $existing_fm->id, 'tbl_food_menus');
+                    $fm_id = $existing_fm->id;
+                } else {
+                    $fm_id = $this->Common_model->insertInformation($fm_data, 'tbl_food_menus');
+                }
+
+                $this->db->where('food_menu_id', $fm_id);
+                $this->db->where('ingredient_id', $id_saved);
+                $exists_link = $this->db->get('tbl_food_menus_ingredients')->row();
+                if (!$exists_link) {
+                    $link_data = array(
+                        'food_menu_id' => $fm_id,
+                        'ingredient_id' => $id_saved,
+                        'consumption' => 1.00,
+                        'user_id' => $this->session->userdata('user_id'),
+                        'company_id' => $company_id,
+                        'del_status' => 'Live',
+                        'cost' => $fmc_info['purchase_price'],
+                        'total' => $fmc_info['purchase_price']
+                    );
+                    $this->Common_model->insertInformation($link_data, 'tbl_food_menus_ingredients');
+                }
+
+                // Add to all outlets of this company so it appears on all POS screens
+                $outlets = $this->db->get_where('tbl_outlets', array('company_id' => $company_id, 'del_status' => 'Live'))->result();
+                if (!empty($outlets)) {
+                    foreach ($outlets as $out) {
+                        if (!empty($out->food_menus)) {
+                            $arr = explode(',', trim($out->food_menus, ','));
+                            if (!in_array($fm_id, $arr)) {
+                                $arr[] = $fm_id;
+                                $updated_fms = implode(',', array_filter($arr)) . ',';
+                                $this->Common_model->updateInformation(array('food_menus' => $updated_fms), $out->id, 'tbl_outlets');
+                            }
+                        }
+                    }
+                }
+
                 redirect('preMadeFood/preMadeFoods');
             } else {
                 if ($id == "") {
@@ -166,6 +265,7 @@ class PreMadeFood extends Cl_Controller {
                     $outlet_id = $this->session->userdata('outlet_id');
                     $data['storages'] = $this->Common_model->getAllByOutletId($outlet_id, "tbl_kitchens");
                     $data['categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_ingredient_categories');
+                    $data['food_menu_categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_food_menu_categories');
                     $data['autoCode'] = $this->Master_model->generateIngredientCode();
                     $data['ingredients'] = $this->Master_model->getIngredientListWithUnit($company_id);
                     $data['main_content'] = $this->load->view('master/preMadeFood/addPreMadeFood', $data, TRUE);
@@ -177,9 +277,14 @@ class PreMadeFood extends Cl_Controller {
                     $data['storages'] = $this->Common_model->getAllByOutletId($outlet_id, "tbl_kitchens");
                     $data['encrypted_id'] = $encrypted_id;
                     $data['categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_ingredient_categories');
+                    $data['food_menu_categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_food_menu_categories');
                     $data['autoCode'] = $this->Master_model->generateIngredientCode();
                     $data['ingredients'] = $this->Master_model->getIngredientListWithUnit($company_id);
                     $data['food_menu_details'] = $this->Common_model->getDataById($id, "tbl_ingredients");
+                    $data['linked_food_menu'] = $this->db->get_where('tbl_food_menus', array('code' => $data['food_menu_details']->code, 'del_status' => 'Live'))->row();
+                    if (!$data['linked_food_menu']) {
+                        $data['linked_food_menu'] = $this->db->get_where('tbl_food_menus', array('name' => $data['food_menu_details']->name, 'del_status' => 'Live'))->row();
+                    }
                     $data['food_menu_ingredients'] = $this->Master_model->getPremadeIngredients($data['food_menu_details']->id);
                     $data['main_content'] = $this->load->view('master/preMadeFood/editPreMadeFood', $data, TRUE);
                     $this->load->view('userHome', $data);
@@ -192,6 +297,7 @@ class PreMadeFood extends Cl_Controller {
                 $outlet_id = $this->session->userdata('outlet_id');
                 $data['storages'] = $this->Common_model->getAllByOutletId($outlet_id, "tbl_kitchens");
                 $data['categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_ingredient_categories');
+                $data['food_menu_categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_food_menu_categories');
                 $data['autoCode'] = $this->Master_model->generateIngredientCode();
                 $data['ingredients'] = $this->Master_model->getIngredientListWithUnit($company_id);
 
@@ -204,9 +310,14 @@ class PreMadeFood extends Cl_Controller {
                 $data['encrypted_id'] = $encrypted_id;
                 $data['units'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_units');
                 $data['categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_ingredient_categories');
+                $data['food_menu_categories'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_food_menu_categories');
                 $data['ingredients'] = $this->Master_model->getIngredientListWithUnit($company_id);
                 $data['autoCode'] = $this->Master_model->generateIngredientCode();
                 $data['food_menu_details'] = $this->Common_model->getDataById($id, "tbl_ingredients");
+                $data['linked_food_menu'] = $this->db->get_where('tbl_food_menus', array('code' => $data['food_menu_details']->code, 'del_status' => 'Live'))->row();
+                if (!$data['linked_food_menu']) {
+                    $data['linked_food_menu'] = $this->db->get_where('tbl_food_menus', array('name' => $data['food_menu_details']->name, 'del_status' => 'Live'))->row();
+                }
                 $data['food_menu_ingredients'] = $this->Master_model->getPremadeIngredients($data['food_menu_details']->id);
                 $data['main_content'] = $this->load->view('master/preMadeFood/editPreMadeFood', $data, TRUE);
                 $this->load->view('userHome', $data);

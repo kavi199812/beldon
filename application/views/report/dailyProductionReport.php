@@ -92,14 +92,8 @@
                             </tr>
                         <?php
                             endforeach;
-                        else:
+                        endif;
                         ?>
-                            <tr>
-                                <td colspan="3" class="text-center">
-                                    <?php echo lang('no_data_found'); ?>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
                     </tbody>
                     <?php if (isset($dailyProductionReport) && !empty($dailyProductionReport)): ?>
                     <tfoot>
@@ -127,6 +121,11 @@
 <script src="<?php echo base_url(); ?>assets/datatable_custom/vfs_fonts.js"></script>
 <script src="<?php echo base_url(); ?>assets/datatable_custom/buttons.html5.min.js"></script>
 <script src="<?php echo base_url(); ?>assets/datatable_custom/buttons.print.min.js"></script>
+<script>
+    if (typeof $.fn.dataTable !== 'undefined') {
+        $.fn.dataTable.ext.errMode = 'none';
+    }
+</script>
 <script src="<?php echo base_url(); ?>frequent_changing/newDesign/js/forTable.js"></script>
 <script src="<?php echo base_url(); ?>frequent_changing/js/custom_report.js"></script>
 <script>

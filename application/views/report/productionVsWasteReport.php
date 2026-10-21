@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /*
  * Production vs Waste Report View
  * Displays pre-made food items produced vs wasted on a given date.
@@ -95,14 +95,8 @@
                             </tr>
                         <?php
                             endforeach;
-                        else:
+                        endif;
                         ?>
-                            <tr>
-                                <td colspan="4" class="text-center">
-                                    <?php echo lang('no_data_found'); ?>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
                     </tbody>
                     <?php if (isset($productionVsWasteReport) && !empty($productionVsWasteReport)): ?>
                     <tfoot>
@@ -130,6 +124,11 @@
 <script src="<?php echo base_url(); ?>assets/datatable_custom/vfs_fonts.js"></script>
 <script src="<?php echo base_url(); ?>assets/datatable_custom/buttons.html5.min.js"></script>
 <script src="<?php echo base_url(); ?>assets/datatable_custom/buttons.print.min.js"></script>
+<script>
+    if (typeof $.fn.dataTable !== 'undefined') {
+        $.fn.dataTable.ext.errMode = 'none';
+    }
+</script>
 <script src="<?php echo base_url(); ?>frequent_changing/newDesign/js/forTable.js"></script>
 <script src="<?php echo base_url(); ?>frequent_changing/js/custom_report.js"></script>
 <script>

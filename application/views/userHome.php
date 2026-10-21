@@ -23,6 +23,7 @@ $data_c = getLanguageManifesto();
 $language_manifesto = $this->session->userdata('language_manifesto');
 $designation = $this->session->userdata('designation');
 $outlet_id = $this->session->userdata('outlet_id');
+$is_modal = (isset($_GET['is_modal']) && $_GET['is_modal'] == '1') || (isset($_GET['modal']) && $_GET['modal'] == '1') || (isset($is_modal) && $is_modal);
     ?>
 <!DOCTYPE html>
 <html>
@@ -99,6 +100,32 @@ $outlet_id = $this->session->userdata('outlet_id');
     <script src="<?php echo base_url(); ?>frequent_changing/js/user_home.js"></script>
     <!-- Favicon -->
     <link rel="icon" href="<?php echo base_url(); ?>images/favicon.ico" type="image/x-icon">
+    <?php if ($is_modal): ?>
+    <style>
+        .main-header, header.main-header,
+        .main-sidebar, aside.main-sidebar,
+        .main-sidebar2, aside.main-sidebar2,
+        .main-footer, footer.main-footer,
+        .main-preloader, .loader {
+            display: none !important;
+        }
+        .content-wrapper, .wrapper .content-wrapper {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-top: 0 !important;
+            padding-top: 5px !important;
+            min-height: auto !important;
+            background: transparent !important;
+        }
+        .wrapper {
+            padding-top: 0 !important;
+            background: transparent !important;
+        }
+        body, html {
+            background: transparent !important;
+        }
+    </style>
+    <?php endif; ?>
 </head>
 
 <?php
@@ -149,6 +176,7 @@ $outlet_id = $this->session->userdata('outlet_id');
     <!-- Site wrapper -->
     <div class="wrapper <?=isset($language) && $language=="arabic"?'arabic-lang"':''?>">
 
+        <?php if (!$is_modal): ?>
         <header class="main-header <?=isset($language) && $language=="arabic"?'sidebar2_active"':''?>">
             <nav class="navbar navbar-static-top" <?=isset($language) && $language=="arabic"?'style="margin-left:0px"':''?>>
                 <div class="wrapper_up_wrapper">
@@ -273,8 +301,9 @@ $outlet_id = $this->session->userdata('outlet_id');
                 </div>
             </nav>
         </header>
+        <?php endif; ?>
 
-
+        <?php if (!$is_modal): ?>
         <?php if(isset($language) && $language=="arabic"):?>
             <!-- Right side column. contains the sidebar -->
         <aside class="main-sidebar2" >
@@ -470,6 +499,12 @@ $outlet_id = $this->session->userdata('outlet_id');
                         <?php endif;?>
 
                         <!-- Daily Reports Links -->
+                        <li data-access="view-165" class="menu_assign_class menu__cidirp_ds" data-menu__cid="irp_ds">
+                            <a style="display: ;" href="<?php echo base_url()?>Report/saleReportByDate">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <span> Daily Sale</span>
+                            </a>
+                        </li>
                         <li data-access="view-189" class="menu_assign_class menu__cidirp_dp" data-menu__cid="irp_dp">
                             <a style="display: ;" href="<?php echo base_url()?>Report/dailyPurchaseReport">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shopping-cart"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
@@ -982,6 +1017,12 @@ $outlet_id = $this->session->userdata('outlet_id');
                         <?php endif;?>
 
                         <!-- Daily Reports Links -->
+                        <li data-access="view-165" class="menu_assign_class menu__cidirp_ds" data-menu__cid="irp_ds">
+                            <a style="display: ;" href="<?php echo base_url()?>Report/saleReportByDate">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <span> Daily Sale</span>
+                            </a>
+                        </li>
                         <li data-access="view-189" class="menu_assign_class menu__cidirp_dp" data-menu__cid="irp_dp">
                             <a style="display: ;" href="<?php echo base_url()?>Report/dailyPurchaseReport">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shopping-cart"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
@@ -1292,6 +1333,7 @@ $outlet_id = $this->session->userdata('outlet_id');
             </aside>
 
         <?php endif; ?>
+        <?php endif; ?>
         <!-- =============================================== -->
 
         <!-- Content Wrapper. Contains page content -->
@@ -1307,6 +1349,7 @@ $outlet_id = $this->session->userdata('outlet_id');
         </div>
         <!-- /.content-wrapper -->
 
+        <?php if (!$is_modal): ?>
        <footer class="main-footer"  <?=isset($language) && $language=="arabic"?'style="margin-left:0px"':''?>>
             <div class="row">
                 <div class="col-md-12 ir_txt_center">
@@ -1314,6 +1357,7 @@ $outlet_id = $this->session->userdata('outlet_id');
                 </div>
             </div>
         </footer>
+        <?php endif; ?>
     </div>
 
     <div class="modal fade" id="todaysSummary" role="dialog" aria-labelledby="myModalLabel">

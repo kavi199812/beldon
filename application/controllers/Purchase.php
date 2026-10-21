@@ -40,8 +40,15 @@ class Purchase extends Cl_Controller {
         }
 
 
-        //start check access function
+        // Allow quick external pre-made purchase from POS without menu permission block
         $segment_2 = $this->uri->segment(2);
+        if (strpos($segment_2, "saveExternalPreMadePurchase") !== false) {
+            $login_session['active_menu_tmp'] = '';
+            $this->session->set_userdata($login_session);
+            return;
+        }
+
+        //start check access function
         $segment_3 = $this->uri->segment(3);
         $controller = "106";
         $function = "";
@@ -273,5 +280,100 @@ class Purchase extends Cl_Controller {
             echo '<option value="' . $value->id . '" >' . $value->name . '</option>';
         }
         exit;
+    }
+
+    /**
+     * Save External Pre-Made Food Purchase (Quick POS Action)
+     */
+    public function saveExternalPreMadePurchase() {
+        if (!$this->session->has_userdata('user_id')) {
+            echo json_encode(array('status' => 'error', 'message' => 'Session expired. Please log in again.'));
+            return;
+        }
+
+        $outlet_id = $this->session->userdata('outlet_id');
+        $company_id = $this->session->userdata('company_id');
+        $user_id = $this->session->userdata('user_id');
+
+        $ingredient_id = $this->input->post('ingredient_id');
+        $quantity = (float)$this->input->post('quantity_amount');
+        $unit_price = (float)$this->input->post('unit_price');
+        $supplier_id = (int)$this->input->post('supplier_id');
+        $payment_id = $this->input->post('payment_id') ? (int)$this->input->post('payment_id') : 1;
+        $note = $this->input->post('note') ? trim($this->input->post('note')) : 'External Pre-Made Food Purchase';
+
+        if (!$ingredient_id || $quantity <= 0) {
+            echo json_encode(array('status' => 'error', 'message' => 'Please select a food item and enter a valid quantity greater than 0.'));
+            return;
+        }
+
+        if ($unit_price < 0) {
+            $unit_price = 0;
+        }
+
+        $total_amount = $quantity * $unit_price;
+
+        if (!$supplier_id) {
+            $first_sup = $this->db->get_where('tbl_suppliers', array('company_id' => $company_id, 'del_status' => 'Live'))->row();
+            $supplier_id = $first_sup ? $first_sup->id : 0;
+        }
+
+        $payment_status = $this->input->post('payment_status');
+        if ($payment_status == 'Due') {
+            $paid = 0;
+            $due = $total_amount;
+        } else {
+            $paid = $total_amount;
+            $due = 0;
+        }
+
+        $purchase_info = array(
+            'reference_no' => $this->Purchase_model->generatePurRefNo($outlet_id),
+            'supplier_id' => $supplier_id,
+            'date' => date('Y-m-d'),
+            'subtotal' => $total_amount,
+            'grand_total' => $total_amount,
+            'paid' => $paid,
+            'due' => $due,
+            'payment_id' => $payment_id,
+            'note' => $note,
+            'user_id' => $user_id,
+            'outlet_id' => $outlet_id,
+            'added_date_time' => date('Y-m-d H:i:s'),
+            'del_status' => 'Live'
+        );
+
+        $purchase_id = $this->Common_model->insertInformation($purchase_info, "tbl_purchase");
+
+        $ingredient = getIngredient($ingredient_id);
+        $conversion_rate = isset($ingredient->conversion_rate) && $ingredient->conversion_rate ? (int)$ingredient->conversion_rate : 1;
+        $inline_cost = ($conversion_rate > 0) ? ($unit_price / $conversion_rate) : $unit_price;
+
+        $fmi = array(
+            'ingredient_id' => $ingredient_id,
+            'unit_price' => $unit_price,
+            'quantity_amount' => $quantity,
+            'total' => $total_amount,
+            'cost_per_unit' => getAmtP($inline_cost),
+            'purchase_id' => $purchase_id,
+            'outlet_id' => $outlet_id,
+            'del_status' => 'Live'
+        );
+
+        $this->Common_model->insertInformation($fmi, "tbl_purchase_ingredients");
+
+        // Update average cost for accurate profit/loss calculation
+        setAverageCost($ingredient_id);
+
+        $item_name = isset($ingredient->name) ? $ingredient->name : 'Pre-Made Food';
+        $unit_name = isset($ingredient->unit_name) ? $ingredient->unit_name : 'pcs';
+
+        echo json_encode(array(
+            'status' => 'success',
+            'message' => 'Successfully added ' . $quantity . ' ' . $unit_name . ' of ' . $item_name . ' to stock! (Total: ' . getAmtP($total_amount) . ')',
+            'item_id' => $ingredient_id,
+            'quantity' => $quantity,
+            'total_amount' => $total_amount
+        ));
     }
 }

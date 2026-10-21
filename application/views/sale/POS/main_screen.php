@@ -858,6 +858,8 @@ if ($wl) {
                     <li><a href="#" id="open_add_purchase_modal"
                             class="bg__pink" style="background:#e83e8c; height: 34px; display: inline-flex; align-items: center; gap: 5px;"><i class="fal fa-shopping-cart"></i> <?php echo lang('purchase'); ?></a></li>
                     <?php endif; ?>
+                    <li><button type="button" id="open_external_purchase_modal"
+                            class="bg__teal" style="background:#0d9488; color:white; border:none; cursor:pointer; padding:0 10px; height: 34px; display: inline-flex; align-items: center; gap: 5px; border-radius:4px; font-weight:600;"><i class="fa fa-store"></i> External Food</button></li>
                 </ul>
             </div>
         </div>
@@ -1733,7 +1735,7 @@ if ($wl) {
                     // ── Add Production Modal ──────────────────────────────
                     $('#open_add_production_modal').on('click', function(e){
                         e.preventDefault();
-                        $('#pos_production_modal_iframe').attr('src', '<?php echo base_url(); ?>Production/addEditProduction');
+                        $('#pos_production_modal_iframe').attr('src', '<?php echo base_url(); ?>Production/addEditProduction?is_modal=1');
                         $('#pos_production_modal').fadeIn(200);
                     });
                     $('#pos_production_modal_iframe').on('load', function(){
@@ -1756,7 +1758,7 @@ if ($wl) {
                     // ── Add Purchase Modal ────────────────────────────────
                     $('#open_add_purchase_modal').on('click', function(e){
                         e.preventDefault();
-                        $('#pos_purchase_modal_iframe').attr('src', '<?php echo base_url(); ?>Purchase/addEditPurchase');
+                        $('#pos_purchase_modal_iframe').attr('src', '<?php echo base_url(); ?>Purchase/addEditPurchase?is_modal=1');
                         $('#pos_purchase_modal').fadeIn(200);
                     });
                     $('#pos_purchase_modal_iframe').on('load', function(){
@@ -1776,12 +1778,116 @@ if ($wl) {
                         $('#pos_purchase_modal_iframe').attr('src','');
                     });
 
-                    // Close both modals on overlay click
+                    // Close modals on overlay click
                     $(document).on('click', '#pos_production_modal, #pos_purchase_modal', function(e){
                         if($(e.target).is('#pos_production_modal, #pos_purchase_modal')){
                             $(this).fadeOut(200);
                             $(this).find('iframe').attr('src','');
                         }
+                    });
+
+                    // ── External Pre-made Food Purchase Modal Logic ───────────────────
+                    function calculateExtPurTotal() {
+                        var qty = parseFloat($('#ext_pur_qty').val()) || 0;
+                        var unitPrice = parseFloat($('#ext_pur_unit_price').val()) || 0;
+                        var total = qty * unitPrice;
+                        $('#ext_pur_total_text').text(total.toFixed(2));
+                    }
+
+                    $(document).on('click', '#open_external_purchase_modal, #open_external_purchase_modal_mobile', function(e){
+                        e.preventDefault();
+                        $('#pos_external_purchase_form')[0].reset();
+                        $('#ext_pur_unit_display').text('');
+                        $('#ext_pur_total_text').text('0.00');
+                        $('#pos_external_purchase_modal').css('display', 'flex').hide().fadeIn(200);
+                    });
+
+                    $(document).on('click', '#pos_external_purchase_modal .ext_purchase_modal_close', function(){
+                        $('#pos_external_purchase_modal').fadeOut(200);
+                    });
+
+                    $(document).on('click', '#pos_external_purchase_modal', function(e){
+                        if ($(e.target).is('#pos_external_purchase_modal')) {
+                            $('#pos_external_purchase_modal').fadeOut(200);
+                        }
+                    });
+
+                    $(document).on('change', '#ext_pur_ingredient_id', function(){
+                        var $opt = $(this).find('option:selected');
+                        var price = $opt.data('price') || '';
+                        var unit = $opt.data('unit') || '';
+                        $('#ext_pur_unit_display').text(unit ? '(' + unit + ')' : '');
+                        if (price && (!parseFloat($('#ext_pur_unit_price').val()) || parseFloat($('#ext_pur_unit_price').val()) == 0)) {
+                            $('#ext_pur_unit_price').val(price);
+                        }
+                        calculateExtPurTotal();
+                    });
+
+                    $(document).on('input keyup change', '#ext_pur_qty, #ext_pur_unit_price', function(){
+                        calculateExtPurTotal();
+                    });
+
+                    $(document).on('submit', '#pos_external_purchase_form', function(e){
+                        e.preventDefault();
+                        var $btn = $('#ext_pur_submit_btn');
+                        var origText = $btn.html();
+                        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+                        $.ajax({
+                            url: '<?php echo base_url(); ?>Purchase/saveExternalPreMadePurchase',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: $(this).serialize(),
+                            success: function(res) {
+                                $btn.prop('disabled', false).html(origText);
+                                if (res.status === 'success') {
+                                    // 1. Immediately close and reset modal so it does not block the screen
+                                    $('#pos_external_purchase_modal').fadeOut(150);
+                                    $('#pos_external_purchase_form')[0].reset();
+                                    $('#ext_pur_total_text').text('0.00');
+                                    $('#ext_pur_unit_display').text('');
+
+                                    // 2. Notify user and refresh POS
+                                    if (typeof swal === 'function') {
+                                        swal({
+                                            title: "Stock Added!",
+                                            text: res.message,
+                                            type: "success",
+                                            confirmButtonText: "OK",
+                                            timer: 2500
+                                        }, function() {
+                                            window.location.reload();
+                                        });
+                                        // Backup auto-reload in case user doesn't click OK button
+                                        setTimeout(function() {
+                                            window.location.reload();
+                                        }, 2200);
+                                    } else {
+                                        alert(res.message);
+                                        window.location.reload();
+                                    }
+                                } else {
+                                    if (typeof swal === 'function') {
+                                        swal("Error", res.message || "Failed to save purchase", "error");
+                                    } else {
+                                        alert(res.message || "Failed to save purchase");
+                                    }
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                $btn.prop('disabled', false).html(origText);
+                                var errMsg = "Failed to save purchase. Please try again.";
+                                try {
+                                    var json = JSON.parse(xhr.responseText);
+                                    if (json.message) errMsg = json.message;
+                                } catch(e){}
+                                if (typeof swal === 'function') {
+                                    swal("Error", errMsg, "error");
+                                } else {
+                                    alert(errMsg);
+                                }
+                            }
+                        });
                     });
 
                     // Trigger the first category tab click immediately once document is ready and items are loaded
@@ -1815,6 +1921,88 @@ if ($wl) {
                             <span class="pos_iframe_modal_close" style="cursor:pointer; font-size:22px; line-height:1;">&times;</span>
                         </div>
                         <iframe id="pos_purchase_modal_iframe" src="" style="width:100%; height:calc(88vh - 46px); border:none;"></iframe>
+                    </div>
+                </div>
+
+                <!-- ── POS External Pre-Made Food Purchase Modal ──────── -->
+                <style>
+                    .sweet-overlay { z-index: 9999998 !important; }
+                    .sweet-alert { z-index: 9999999 !important; }
+                </style>
+                <div id="pos_external_purchase_modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9990; justify-content:center; align-items:center;">
+                    <div style="background:#fff; width:95%; max-width:550px; border-radius:12px; overflow:hidden; box-shadow:0 15px 45px rgba(0,0,0,0.35); position:relative; margin:auto; font-family: inherit;">
+                        <div style="background:#0d9488; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa fa-store"></i>
+                                <span>External Food Purchase</span>
+                            </div>
+                            <span class="ext_purchase_modal_close" style="cursor:pointer; font-size:24px; line-height:1; color:#fff;">&times;</span>
+                        </div>
+                        <form id="pos_external_purchase_form" style="padding:22px 25px 20px 25px;">
+                            <div style="margin-bottom:15px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Select Pre-Made Item <span style="color:#ef4444;">*</span></label>
+                                <select id="ext_pur_ingredient_id" name="ingredient_id" required style="width:100%; height:42px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:14px; background:#f9fafb;">
+                                    <option value="">-- Choose Pre-Made Food --</option>
+                                    <?php if (!empty($pre_made_ingredients)): ?>
+                                        <?php foreach ($pre_made_ingredients as $pmi): ?>
+                                            <option value="<?php echo escape_output($pmi->id); ?>" 
+                                                    data-price="<?php echo escape_output($pmi->purchase_price); ?>" 
+                                                    data-unit="<?php echo escape_output($pmi->unit_name); ?>">
+                                                <?php echo escape_output($pmi->name) . ' (' . escape_output($pmi->code) . ')'; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                                <div>
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Quantity <span id="ext_pur_unit_display" style="font-weight:400; color:#6b7280;"></span> <span style="color:#ef4444;">*</span></label>
+                                    <input type="number" step="any" min="0.001" id="ext_pur_qty" name="quantity_amount" required placeholder="0.00" style="width:100%; height:42px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:14px;">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Unit Cost Price <span style="color:#ef4444;">*</span></label>
+                                    <input type="number" step="any" min="0" id="ext_pur_unit_price" name="unit_price" required placeholder="0.00" style="width:100%; height:42px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:14px;">
+                                </div>
+                            </div>
+
+                            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:14px; font-weight:600; color:#166534;">Total Purchase Cost:</span>
+                                <span id="ext_pur_total_text" style="font-size:18px; font-weight:700; color:#15803d;">0.00</span>
+                            </div>
+
+                            <div style="margin-bottom:15px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Payment Status <span style="color:#ef4444;">*</span></label>
+                                <select id="ext_pur_payment_status" name="payment_status" required style="width:100%; height:42px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:14px; background:#f9fafb;">
+                                    <option value="Paid">Paid Now (Cash Paid / Paid Immediately)</option>
+                                    <option value="Due">Due / Pay Later (To Pay at End of Day / On Credit)</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom:15px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Supplier / Bakery (Optional)</label>
+                                <select id="ext_pur_supplier_id" name="supplier_id" style="width:100%; height:42px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:14px; background:#f9fafb;">
+                                    <option value="">-- Outside Bakery / Shop (None) --</option>
+                                    <?php if (!empty($suppliers)): ?>
+                                        <?php foreach ($suppliers as $sup): ?>
+                                            <option value="<?php echo escape_output($sup->id); ?>"><?php echo escape_output($sup->name); ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom:20px;">
+                                <label style="display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">Note (Optional)</label>
+                                <input type="text" id="ext_pur_note" name="note" placeholder="e.g. Purchased from Outside Bakery" style="width:100%; height:40px; border:1px solid #d1d5db; border-radius:6px; padding:0 12px; font-size:13px;">
+                            </div>
+
+                            <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #f3f4f6; padding-top:15px;">
+                                <button type="button" class="ext_purchase_modal_close" style="padding:9px 18px; border:1px solid #d1d5db; background:#fff; color:#4b5563; border-radius:6px; font-weight:600; cursor:pointer;">Cancel</button>
+                                <button type="submit" id="ext_pur_submit_btn" style="padding:9px 22px; border:none; background:#0d9488; color:#fff; border-radius:6px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                                    <i class="fa fa-check"></i> Add to Stock
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -1852,6 +2040,7 @@ if ($wl) {
                 <?php if ($show_pos_waste_btn !== 'hide'): ?>
                 <li><button type="button" id="add_waste_btn_mobile" style="background:none; border:none; cursor:pointer; color:#dc3545; padding:8px 0; width:100%; text-align:left;"><i class="far fa-trash-alt"></i> Add Waste</button></li>
                 <?php endif; ?>
+                <li><button type="button" id="open_external_purchase_modal_mobile" style="background:none; border:none; cursor:pointer; color:#0d9488; padding:8px 0; width:100%; text-align:left; font-weight:600;"><i class="fa fa-store"></i> External Food</button></li>
                 <li><a href="#" data-status="" class="get_prom_details"><i class="fas fa-poo"></i>
                         <?php echo lang('View_Promo'); ?></a></li>
                 <li>
@@ -5828,15 +6017,11 @@ if ($wl) {
             var wasteVerifiedPin = '';
             var wastePinTimer = null;
 
-            // Open Modal
+            // Redirect to Dedicated Manual Daily Waste Page
             $(document).on('click', '#add_waste_btn, #add_waste_btn_mobile', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                resetWastePinModal();
-                $('#waste_pin_modal').css('display', 'flex').hide().fadeIn(200);
-                setTimeout(function() {
-                    $('#waste_pin_code').focus();
-                }, 250);
+                window.location.href = '<?php echo base_url(); ?>Waste/dailyWaste';
             });
 
             // Close Modal
