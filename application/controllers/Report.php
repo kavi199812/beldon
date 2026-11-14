@@ -1148,7 +1148,7 @@ class Report extends Cl_Controller {
             }
             $raw_date = htmlspecialcharscustom($this->input->post($this->security->xss_clean('date')));
             if ($raw_date) {
-                $selected_date = date('Y-m-d', strtotime($raw_date));
+                $selected_date = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date)));
             }
         }
         $data['outlet_id']      = $outlet_id;
@@ -1175,7 +1175,7 @@ class Report extends Cl_Controller {
             }
             $raw_date = htmlspecialcharscustom($this->input->post($this->security->xss_clean('date')));
             if ($raw_date) {
-                $selected_date = date('Y-m-d', strtotime($raw_date));
+                $selected_date = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date)));
             }
         }
         $data['outlet_id']          = $outlet_id;
@@ -1202,7 +1202,7 @@ class Report extends Cl_Controller {
             }
             $raw_date = htmlspecialcharscustom($this->input->post($this->security->xss_clean('date')));
             if ($raw_date) {
-                $selected_date = date('Y-m-d', strtotime($raw_date));
+                $selected_date = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date)));
             }
         }
         $data['outlet_id']           = $outlet_id;
@@ -1229,7 +1229,7 @@ class Report extends Cl_Controller {
             }
             $raw_date = htmlspecialcharscustom($this->input->post($this->security->xss_clean('date')));
             if ($raw_date) {
-                $selected_date = date('Y-m-d', strtotime($raw_date));
+                $selected_date = date('Y-m-d', strtotime(str_replace('/', '-', $raw_date)));
             }
         }
         $data['outlet_id']               = $outlet_id;

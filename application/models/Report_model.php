@@ -1921,7 +1921,7 @@ FROM tbl_food_menus_ingredients i  LEFT JOIN (select * from tbl_ingredients wher
      * @param int     $outlet_id
      */
     public function foodWasteReport($date = '', $outlet_id = '') {
-        $this->db->select('tbl_ingredients.name as product_name, SUM(tbl_waste_ingredients.waste_amount) as waste_amount, tbl_units.unit_name, tbl_wastes.date as waste_date');
+        $this->db->select('tbl_ingredients.id as ingredient_id, tbl_ingredients.name as product_name, SUM(tbl_waste_ingredients.waste_amount) as waste_amount, tbl_units.unit_name, tbl_wastes.date as waste_date');
         $this->db->from('tbl_waste_ingredients');
         $this->db->join('tbl_wastes', 'tbl_wastes.id = tbl_waste_ingredients.waste_id');
         $this->db->join('tbl_ingredients', 'tbl_ingredients.id = tbl_waste_ingredients.ingredient_id');
@@ -1929,14 +1929,34 @@ FROM tbl_food_menus_ingredients i  LEFT JOIN (select * from tbl_ingredients wher
         if ($date != '') {
             $this->db->where('tbl_wastes.date', $date);
         }
-        $this->db->where('tbl_wastes.note', 'Auto-wasted all Pre-Made Food');
+        $this->db->where('tbl_ingredients.ing_type', 'Pre-made Item');
+        $this->db->where('tbl_ingredients.del_status', 'Live');
         $this->db->where('tbl_wastes.outlet_id', $outlet_id);
         $this->db->where('tbl_wastes.del_status', 'Live');
         $this->db->where('tbl_waste_ingredients.del_status', 'Live');
         $this->db->group_by('tbl_ingredients.id');
         $this->db->order_by('tbl_ingredients.name', 'ASC');
         $query = $this->db->get();
-        return $query->result();
+        $items = $query->result();
+
+        if (!empty($items)) {
+            foreach ($items as $item) {
+                $this->db->select('tbl_wastes.id as waste_id, tbl_wastes.reference_no, tbl_wastes.date, tbl_wastes.note, tbl_waste_ingredients.waste_amount, tbl_waste_ingredients.loss_amount, tbl_users.full_name as employee_name');
+                $this->db->from('tbl_waste_ingredients');
+                $this->db->join('tbl_wastes', 'tbl_wastes.id = tbl_waste_ingredients.waste_id');
+                $this->db->join('tbl_users', 'tbl_users.id = tbl_wastes.employee_id', 'left');
+                $this->db->where('tbl_waste_ingredients.ingredient_id', $item->ingredient_id);
+                if ($date != '') {
+                    $this->db->where('tbl_wastes.date', $date);
+                }
+                $this->db->where('tbl_wastes.outlet_id', $outlet_id);
+                $this->db->where('tbl_wastes.del_status', 'Live');
+                $this->db->where('tbl_waste_ingredients.del_status', 'Live');
+                $this->db->order_by('tbl_wastes.id', 'ASC');
+                $item->batches = $this->db->get()->result();
+            }
+        }
+        return $items;
     }
 
     /**
@@ -2440,7 +2460,7 @@ FROM tbl_food_menus_ingredients i  LEFT JOIN (select * from tbl_ingredients wher
                     SELECT wi.ingredient_id, SUM(wi.waste_amount) as total_waste 
                     FROM tbl_waste_ingredients wi 
                     JOIN tbl_wastes w ON w.id = wi.waste_id 
-                    WHERE w.date = ? AND w.outlet_id = ? AND w.note = 'Auto-wasted all Pre-Made Food' AND w.del_status = 'Live' AND wi.del_status = 'Live' 
+                    WHERE w.date = ? AND w.outlet_id = ? AND w.del_status = 'Live' AND wi.del_status = 'Live' 
                     GROUP BY wi.ingredient_id
                 ) waste ON waste.ingredient_id = i.id
                 LEFT JOIN tbl_units u ON u.id = i.unit_id
