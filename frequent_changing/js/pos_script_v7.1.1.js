@@ -1012,7 +1012,11 @@
      * Added Date: 25/9/2021
      *****/
     function add_to_recent_sale_by_ajax(order_object, sale_id, is_ignore = '') {
-        let sale = JSON.parse(order_object);
+        // Instantly update pre-made stock badges on POS screen
+        if (typeof window.deductPremadeStockFromOrder === 'function') {
+            window.deductPremadeStockFromOrder(order_object);
+        }
+        let sale = typeof order_object === 'string' ? JSON.parse(order_object) : order_object;
 
         let order_info = {
             order: order_object,
@@ -1455,6 +1459,9 @@
                                 notify_online(sale_no);
                             }
                             update_online_push(response);
+                            if (typeof window.refreshPremadeStocks === 'function') {
+                                window.refreshPremadeStocks();
+                            }
                         },
                         error: function () {
 
@@ -1491,6 +1498,9 @@
                         success: function (response) {
                             notify_online(sale_no);
                             update_online_push(response);
+                            if (typeof window.refreshPremadeStocks === 'function') {
+                                window.refreshPremadeStocks();
+                            }
                         },
                         error: function () {
 
@@ -12911,7 +12921,7 @@
     function add_sale_by_ajax(order_object, sale_id, outlet_id = '', company_id = '', sale_no_new = '', is_direct_sale = '', action_type = '') {
         //reset previous update sale id
         $("#update_sale_id").val("");
-        let sale = JSON.parse(order_object);
+        let sale = typeof order_object === 'string' ? JSON.parse(order_object) : order_object;
         $("#place_edit_order").html(place_order);
         removeLastAddedOrderTables();
         let added_offline_status = 1;

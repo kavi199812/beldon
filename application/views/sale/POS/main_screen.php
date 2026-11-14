@@ -201,10 +201,14 @@ if (isset($food_menus) && $food_menus):
             $image_path = base_url() . 'images/image_thumb.png';
         }
 
+        $is_premade_val = (isset($single_menus->is_premade) && $single_menus->is_premade == '1') ? '1' : '0';
+        $stock_qty_val = isset($single_menus->stock_qty) ? $single_menus->stock_qty : '0';
+        $stock_unit_val = isset($single_menus->stock_unit) ? $single_menus->stock_unit : '';
+
         if ($total_menus == $i) {
-            $javascript_obects .= "{item_id:'" . $single_menus->id . "',kitchen_id:'" . $single_menus->kitchen_id . "',kitchen_name:'" . $single_menus->kitchen_name . "',is_promo:'" . $is_promo . "',qty:'" . $qty . "',modal_item_name_row:'" . $modal_item_name_row . "',promo_type:'" . $promo_type . "',get_food_menu_id:'" . $get_food_menu_id . "',string_text:'" . $string_text . "',get_qty:'" . $get_qty . "',discount:'" . $discount . "',parent_id:'" . $single_menus->parent_id . "',product_type:'" . $single_menus->product_type . "',product_comb:'" . $product_comb . "',is_variation:'" . $is_variation . "',item_code:'" . getPlanText($single_menus->code) . "',category_name:'" . getPlanText($single_menus->category_name) . "',category_default_order_type:'" . escape_output($single_menus->category_default_order_type) . "',category_kot_order_type:'" . escape_output($single_menus->category_kot_order_type) . "',item_name:'" . getPlanText($single_menus->name) . "',item_name_tmp:'" . getPlanText($item_name_tmp) . "',price:'" . getAmtP($sale_price) . "',price_take:'" . getAmtP($sale_price_take) . "',price_delivery:'" . getAmtP($sale_price_delivery) . "',price_delivery_details:'" . ($sale_price_delivery_details) . "',image:'" . $image_path . "',tax_information:'" . $single_menus->tax_information . "',vat_percentage:'0',veg_item:'" . $veg_status . "',beverage_item:'" . $soft_status . "',sold_for:'" . $single_menus->item_sold . "',veg_item_status:'" . $veg_status1 . "',beverage_item_status:'" . $beverage_status . "',modifiers:[" . $modifiers . "]}";
+            $javascript_obects .= "{item_id:'" . $single_menus->id . "',kitchen_id:'" . $single_menus->kitchen_id . "',kitchen_name:'" . $single_menus->kitchen_name . "',is_promo:'" . $is_promo . "',qty:'" . $qty . "',modal_item_name_row:'" . $modal_item_name_row . "',promo_type:'" . $promo_type . "',get_food_menu_id:'" . $get_food_menu_id . "',string_text:'" . $string_text . "',get_qty:'" . $get_qty . "',discount:'" . $discount . "',parent_id:'" . $single_menus->parent_id . "',product_type:'" . $single_menus->product_type . "',product_comb:'" . $product_comb . "',is_variation:'" . $is_variation . "',item_code:'" . getPlanText($single_menus->code) . "',category_name:'" . getPlanText($single_menus->category_name) . "',category_default_order_type:'" . escape_output($single_menus->category_default_order_type) . "',category_kot_order_type:'" . escape_output($single_menus->category_kot_order_type) . "',item_name:'" . getPlanText($single_menus->name) . "',item_name_tmp:'" . getPlanText($item_name_tmp) . "',price:'" . getAmtP($sale_price) . "',price_take:'" . getAmtP($sale_price_take) . "',price_delivery:'" . getAmtP($sale_price_delivery) . "',price_delivery_details:'" . ($sale_price_delivery_details) . "',image:'" . $image_path . "',tax_information:'" . $single_menus->tax_information . "',vat_percentage:'0',veg_item:'" . $veg_status . "',beverage_item:'" . $soft_status . "',sold_for:'" . $single_menus->item_sold . "',veg_item_status:'" . $veg_status1 . "',beverage_item_status:'" . $beverage_status . "',is_premade:'" . $is_premade_val . "',stock_qty:'" . $stock_qty_val . "',stock_unit:'" . $stock_unit_val . "',modifiers:[" . $modifiers . "]}";
         } else {
-            $javascript_obects .= "{item_id:'" . $single_menus->id . "',kitchen_id:'" . $single_menus->kitchen_id . "',kitchen_name:'" . $single_menus->kitchen_name . "',is_promo:'" . $is_promo . "',qty:'" . $qty . "',modal_item_name_row:'" . $modal_item_name_row . "',promo_type:'" . $promo_type . "',get_food_menu_id:'" . $get_food_menu_id . "',string_text:'" . $string_text . "',get_qty:'" . $get_qty . "',discount:'" . $discount . "',parent_id:'" . $single_menus->parent_id . "',product_type:'" . $single_menus->product_type . "',product_comb:'" . $product_comb . "',is_variation:'" . $is_variation . "',item_code:'" . getPlanText($single_menus->code) . "',category_name:'" . getPlanText($single_menus->category_name) . "',category_default_order_type:'" . escape_output($single_menus->category_default_order_type) . "',category_kot_order_type:'" . escape_output($single_menus->category_kot_order_type) . "',item_name:'" . getPlanText($single_menus->name) . "',item_name_tmp:'" . getPlanText($item_name_tmp) . "',price:'" . getAmtP($sale_price) . "',price_take:'" . getAmtP($sale_price_take) . "',price_delivery:'" . getAmtP($sale_price_delivery) . "',price_delivery_details:'" . ($sale_price_delivery_details) . "',image:'" . $image_path . "',tax_information:'" . $single_menus->tax_information . "',vat_percentage:'0',veg_item:'" . $veg_status . "',beverage_item:'" . $soft_status . "',sold_for:'" . $single_menus->item_sold . "',veg_item_status:'" . $veg_status1 . "',beverage_item_status:'" . $beverage_status . "',modifiers:[" . $modifiers . "]},";
+            $javascript_obects .= "{item_id:'" . $single_menus->id . "',kitchen_id:'" . $single_menus->kitchen_id . "',kitchen_name:'" . $single_menus->kitchen_name . "',is_promo:'" . $is_promo . "',qty:'" . $qty . "',modal_item_name_row:'" . $modal_item_name_row . "',promo_type:'" . $promo_type . "',get_food_menu_id:'" . $get_food_menu_id . "',string_text:'" . $string_text . "',get_qty:'" . $get_qty . "',discount:'" . $discount . "',parent_id:'" . $single_menus->parent_id . "',product_type:'" . $single_menus->product_type . "',product_comb:'" . $product_comb . "',is_variation:'" . $is_variation . "',item_code:'" . getPlanText($single_menus->code) . "',category_name:'" . getPlanText($single_menus->category_name) . "',category_default_order_type:'" . escape_output($single_menus->category_default_order_type) . "',category_kot_order_type:'" . escape_output($single_menus->category_kot_order_type) . "',item_name:'" . getPlanText($single_menus->name) . "',item_name_tmp:'" . getPlanText($item_name_tmp) . "',price:'" . getAmtP($sale_price) . "',price_take:'" . getAmtP($sale_price_take) . "',price_delivery:'" . getAmtP($sale_price_delivery) . "',price_delivery_details:'" . ($sale_price_delivery_details) . "',image:'" . $image_path . "',tax_information:'" . $single_menus->tax_information . "',vat_percentage:'0',veg_item:'" . $veg_status . "',beverage_item:'" . $soft_status . "',sold_for:'" . $single_menus->item_sold . "',veg_item_status:'" . $veg_status1 . "',beverage_item_status:'" . $beverage_status . "',is_premade:'" . $is_premade_val . "',stock_qty:'" . $stock_qty_val . "',stock_unit:'" . $stock_unit_val . "',modifiers:[" . $modifiers . "]},";
         }
         //end_new_added_zak
 
@@ -565,6 +569,34 @@ if ($wl) {
         href="<?php echo base_url(); ?>assets/POS/css/lib/perfect-scrollbar/css/perfect-scrollbar.css">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/POS/css/custom_category_grid.css">
     <style>
+        /* ── Stock Badge for Pre-Made Items ── */
+        #inline_product_grid .single_item .pos_stock_badge {
+            display: inline-block !important;
+            font-size: 10px !important;
+            font-weight: 700 !important;
+            padding: 2px 7px !important;
+            border-radius: 12px !important;
+            margin: 2px 0 4px 0 !important;
+            line-height: 1.2 !important;
+            letter-spacing: 0.2px !important;
+            white-space: nowrap !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        }
+        #inline_product_grid .single_item .pos_stock_badge.pos_stock_in {
+            background: #e8f5e9 !important;
+            color: #1b5e20 !important;
+            border: 1px solid #a5d6a7 !important;
+        }
+        #inline_product_grid .single_item .pos_stock_badge.pos_stock_low {
+            background: #fff3e0 !important;
+            color: #e65100 !important;
+            border: 1px solid #ffcc80 !important;
+        }
+        #inline_product_grid .single_item .pos_stock_badge.pos_stock_out {
+            background: #ffebee !important;
+            color: #c62828 !important;
+            border: 1px solid #ef9a9a !important;
+        }
         <?php
         if ($waiter_app_status == "Yes"): ?>
 
@@ -1566,6 +1598,118 @@ if ($wl) {
                             }
                         }, 300);
 
+                        // ── Update Stock Badge dynamically ──────────────────────────────
+                        window._deductedSales = window._deductedSales || {};
+
+                        window.setPosStockBadge = function(itemId, stockQty, stockUnit) {
+                            var itmIdStr = String(itemId);
+                            if (!window.itemMap) return;
+                            var item = window.itemMap[itmIdStr] || window.itemMap[parseInt(itmIdStr, 10)];
+                            if (!item) return;
+
+                            item.is_premade = '1';
+                            item.stock_qty = stockQty;
+                            if (stockUnit) item.stock_unit = stockUnit;
+
+                            var stockVal = parseFloat(stockQty);
+                            if (isNaN(stockVal)) stockVal = 0;
+                            var unit = item.stock_unit || 'pcs';
+                            var formattedQty = (stockVal % 1 === 0) ? stockVal.toFixed(0) : stockVal.toFixed(1);
+                            var badgeClass = 'pos_stock_in';
+                            var badgeText = 'Stock: ' + formattedQty + ' ' + unit;
+
+                            if (stockVal <= 0) {
+                                badgeClass = 'pos_stock_out';
+                                badgeText = 'Out of Stock (0)';
+                            } else if (stockVal <= 5) {
+                                badgeClass = 'pos_stock_low';
+                                badgeText = 'Low: ' + formattedQty + ' ' + unit;
+                            }
+
+                            // Update all occurrences in DOM
+                            var $badges = $('[id="stock_badge_' + itmIdStr + '"]');
+                            if ($badges.length) {
+                                $badges.removeClass('pos_stock_in pos_stock_low pos_stock_out').addClass(badgeClass).text(badgeText);
+                            } else {
+                                var $cards = $('[id="item_' + itmIdStr + '"]');
+                                if ($cards.length) {
+                                    var $newBadge = $('<span class="pos_stock_badge ' + badgeClass + '" id="stock_badge_' + itmIdStr + '"></span>');
+                                    $newBadge.text(badgeText);
+                                    $cards.find('.item_price').before($newBadge);
+                                }
+                            }
+                        };
+
+                        window.updatePosStockBadge = function(itemId, changeQty) {
+                            var itmIdStr = String(itemId);
+                            if (!window.itemMap) return;
+                            var item = window.itemMap[itmIdStr] || window.itemMap[parseInt(itmIdStr, 10)];
+                            if (!item) return;
+                            if (item.is_premade !== '1' && item.is_premade !== 1) return;
+
+                            var cur = parseFloat(item.stock_qty);
+                            if (isNaN(cur)) cur = 0;
+                            var next = cur + changeQty;
+                            window.setPosStockBadge(itmIdStr, next, item.stock_unit);
+                        };
+
+                        window.deductPremadeStockFromOrder = function(orderObj) {
+                            if (!orderObj) return;
+                            var sale = typeof orderObj === 'string' ? JSON.parse(orderObj) : orderObj;
+                            if (!sale) return;
+                            var saleKey = sale.sale_no || sale.sale_id || sale.sales_id;
+                            if (saleKey && window._deductedSales[saleKey]) {
+                                return; // already deducted
+                            }
+                            if (saleKey) {
+                                window._deductedSales[saleKey] = true;
+                            }
+                            if (sale.items && sale.items.length > 0) {
+                                for (var i = 0; i < sale.items.length; i++) {
+                                    var itm = sale.items[i];
+                                    var itmId = itm.food_menu_id || itm.item_id;
+                                    var itmQty = parseFloat(itm.qty || itm.item_quantity || 0);
+                                    if (itmId && itmQty > 0) {
+                                        window.updatePosStockBadge(itmId, -itmQty);
+                                    }
+                                }
+                            }
+                        };
+
+                        window.refreshPremadeStocks = function() {
+                            if (typeof base_url === 'undefined') return;
+                            $.ajax({
+                                url: base_url + 'Sale/get_premade_stocks_ajax',
+                                method: 'GET',
+                                dataType: 'json',
+                                cache: false,
+                                success: function(res) {
+                                    if (res && res.status === 'success' && res.stocks) {
+                                        for (var fmId in res.stocks) {
+                                            if (res.stocks.hasOwnProperty(fmId)) {
+                                                var s = res.stocks[fmId];
+                                                window.setPosStockBadge(fmId, s.stock_qty, s.stock_unit);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        };
+
+                        // Re-sync stock badges if finalize modal is closed/cancelled without payment
+                        $(document).on('click', '.alertCloseIcon, #cancel_discount_modal, #finalize_order_cancel_button', function() {
+                            if (typeof window.refreshPremadeStocks === 'function') {
+                                window.refreshPremadeStocks();
+                            }
+                        });
+
+                        // Refresh stock badges when order list is refreshed
+                        $(document).on('click', '#refresh_order', function() {
+                            if (typeof window.refreshPremadeStocks === 'function') {
+                                window.refreshPremadeStocks();
+                            }
+                        });
+
                         // ── Inline product grid render ──────────────────────────────
                         function buildProductCard(item) {
                             // Use DOM methods (not string concat) so that
@@ -1582,6 +1726,8 @@ if ($wl) {
                                 'data-veg_status':        item.veg_item_status,
                                 'data-beverage_status':   item.beverage_item_status,
                                 'data-parent_id':         item.parent_id,
+                                'data-is_premade':        item.is_premade || '0',
+                                'data-stock_qty':         item.stock_qty || '0',
                                 'id':                     'item_' + item.item_id
                             });
 
@@ -1593,6 +1739,28 @@ if ($wl) {
                             var decodedName = $('<textarea/>').html(item.item_name).val();
                             $name.text(decodedName).attr('data-tippy-content', decodedName);
                             $name.appendTo($card);
+
+                            // Stock Badge for Pre-Made Items
+                            if (item.is_premade === '1' || item.is_premade === 1) {
+                                var stockVal = parseFloat(item.stock_qty);
+                                if (isNaN(stockVal)) stockVal = 0;
+                                var unitVal = item.stock_unit || 'pcs';
+                                var badgeClass = 'pos_stock_in';
+                                var formattedQty = (stockVal % 1 === 0) ? stockVal.toFixed(0) : stockVal.toFixed(1);
+                                var badgeText = 'Stock: ' + formattedQty + ' ' + unitVal;
+
+                                if (stockVal <= 0) {
+                                    badgeClass = 'pos_stock_out';
+                                    badgeText = 'Out of Stock (0)';
+                                } else if (stockVal <= 5) {
+                                    badgeClass = 'pos_stock_low';
+                                    badgeText = 'Low: ' + formattedQty + ' ' + unitVal;
+                                }
+
+                                var $stockBadge = $('<span class="pos_stock_badge ' + badgeClass + '" id="stock_badge_' + item.item_id + '"></span>');
+                                $stockBadge.text(badgeText);
+                                $stockBadge.appendTo($card);
+                            }
 
                             // Price
                             var $price = $('<p class="item_price"></p>');
@@ -1846,6 +2014,14 @@ if ($wl) {
                                     $('#pos_external_purchase_form')[0].reset();
                                     $('#ext_pur_total_text').text('0.00');
                                     $('#ext_pur_unit_display').text('');
+
+                                    // Update stock immediately on product card
+                                    if (res.item_id && window.premadeIngToMenu && window.premadeIngToMenu[res.item_id]) {
+                                        var fmId = window.premadeIngToMenu[res.item_id];
+                                        if (typeof window.updatePosStockBadge === 'function') {
+                                            window.updatePosStockBadge(fmId, parseFloat(res.quantity) || 0);
+                                        }
+                                    }
 
                                     // 2. Notify user and refresh POS
                                     if (typeof swal === 'function') {
@@ -5697,6 +5873,7 @@ if ($wl) {
         window.items = [<?php echo ($javascript_obects); ?>];
         window.only_modifiers = [<?php echo ($javascript_obects_only_modifier); ?>];
         window.kitchens = [<?php echo ($kitchens_objects); ?>];
+        window.premadeIngToMenu = <?php echo json_encode(isset($premade_ing_to_menu) ? $premade_ing_to_menu : array()); ?>;
 
         // RAM & CPU Optimization: Global Maps for O(1) lookup
         window.itemMap = {};

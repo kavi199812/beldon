@@ -436,14 +436,86 @@ class Sale extends Cl_Controller {
         $data['tables'] = $this->getTablesDetails($tables);
         $data['customers'] = $this->Common_model->getAllByCompanyIdForDropdown($company_id, 'tbl_customers');
         $data['food_menus'] = $this->Sale_model->getAllFoodMenus();
+
+        // Fetch live stock for all Pre-Made foods for this outlet
+        $premade_stocks = $this->db->query("
+            SELECT 
+                fmi.food_menu_id,
+                i.id as ingredient_id,
+                i.code as ingredient_code,
+                i.conversion_rate,
+                u.unit_name,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_purchase_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_purchase,
+                (SELECT COALESCE(SUM(consumption), 0) FROM tbl_sale_consumptions_of_menus WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption,
+                (SELECT COALESCE(SUM(consumption), 0) FROM tbl_sale_consumptions_of_modifiers_of_menus WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_modifiers_consumption,
+                (SELECT COALESCE(SUM(waste_amount), 0) FROM tbl_waste_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_waste,
+                (SELECT COALESCE(SUM(consumption_amount), 0) FROM tbl_inventory_adjustment_ingredients WHERE ingredient_id = i.id AND consumption_status = 'Plus' AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption_plus,
+                (SELECT COALESCE(SUM(consumption_amount), 0) FROM tbl_inventory_adjustment_ingredients WHERE ingredient_id = i.id AND consumption_status = 'Minus' AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption_minus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_production_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_production,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_ingredients WHERE ingredient_id = i.id AND to_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1 AND transfer_type = 1) as total_transfer_plus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_ingredients WHERE ingredient_id = i.id AND from_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1 AND transfer_type = 1) as total_transfer_minus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_received_ingredients WHERE ingredient_id = i.id AND to_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_transfer_plus_2,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_received_ingredients WHERE ingredient_id = i.id AND from_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_transfer_minus_2
+            FROM tbl_ingredients i
+            LEFT JOIN tbl_food_menus_ingredients fmi ON fmi.ingredient_id = i.id AND fmi.del_status = 'Live'
+            LEFT JOIN tbl_units u ON u.id = i.unit_id
+            WHERE i.company_id = $company_id 
+              AND i.del_status = 'Live' 
+              AND i.ing_type = 'Pre-made Item'
+        ")->result();
+
+        $premade_map = array();
+        $premade_code_map = array();
+        $premade_ing_to_menu = array();
+        if (!empty($premade_stocks)) {
+            foreach ($premade_stocks as $pms) {
+                $conv = ($pms->conversion_rate > 0) ? (float)$pms->conversion_rate : 1;
+                $total_in = ((float)$pms->total_purchase + (float)$pms->total_production + (float)$pms->total_transfer_plus + (float)$pms->total_transfer_plus_2) * $conv + (float)$pms->total_consumption_plus;
+                $total_out = (float)$pms->total_consumption + (float)$pms->total_modifiers_consumption + (float)$pms->total_waste + (float)$pms->total_consumption_minus + (((float)$pms->total_transfer_minus + (float)$pms->total_transfer_minus_2) * $conv);
+                $live_stock = $total_in - $total_out;
+                $stock_info = array(
+                    'is_premade' => '1',
+                    'ingredient_id' => $pms->ingredient_id,
+                    'stock_qty' => round($live_stock, 2),
+                    'stock_unit' => $pms->unit_name ? $pms->unit_name : 'pcs'
+                );
+                if (!empty($pms->food_menu_id)) {
+                    $premade_map[$pms->food_menu_id] = $stock_info;
+                    $premade_ing_to_menu[$pms->ingredient_id] = $pms->food_menu_id;
+                }
+                if (!empty($pms->ingredient_code)) {
+                    $premade_code_map[$pms->ingredient_code] = $stock_info;
+                }
+            }
+        }
+        $data['premade_ing_to_menu'] = $premade_ing_to_menu;
+
         if(isset($data['food_menus']) && $data['food_menus']){
             foreach ($data['food_menus'] as $key=>$value){
                 $variations = $this->Common_model->getAllByCustomId($value->id,"parent_id","tbl_food_menus",$order='');
                 $data['food_menus'][$key]->is_variation = isset($variations) && $variations?'Yes':'No';
                 $data['food_menus'][$key]->variations = $variations;
-                    $kitchen = getKitchenNameAndId($value->category_id);
-                    $data['food_menus'][$key]->kitchen_id =$kitchen[0];
-                    $data['food_menus'][$key]->kitchen_name =$kitchen[1];
+                $kitchen = getKitchenNameAndId($value->category_id);
+                $data['food_menus'][$key]->kitchen_id =$kitchen[0];
+                $data['food_menus'][$key]->kitchen_name =$kitchen[1];
+
+                if (isset($premade_map[$value->id])) {
+                    $data['food_menus'][$key]->is_premade = '1';
+                    $data['food_menus'][$key]->stock_qty = $premade_map[$value->id]['stock_qty'];
+                    $data['food_menus'][$key]->stock_unit = $premade_map[$value->id]['stock_unit'];
+                } elseif (!empty($value->parent_id) && isset($premade_map[$value->parent_id])) {
+                    $data['food_menus'][$key]->is_premade = '1';
+                    $data['food_menus'][$key]->stock_qty = $premade_map[$value->parent_id]['stock_qty'];
+                    $data['food_menus'][$key]->stock_unit = $premade_map[$value->parent_id]['stock_unit'];
+                } elseif (!empty($value->code) && isset($premade_code_map[$value->code])) {
+                    $data['food_menus'][$key]->is_premade = '1';
+                    $data['food_menus'][$key]->stock_qty = $premade_code_map[$value->code]['stock_qty'];
+                    $data['food_menus'][$key]->stock_unit = $premade_code_map[$value->code]['stock_unit'];
+                } else {
+                    $data['food_menus'][$key]->is_premade = '0';
+                    $data['food_menus'][$key]->stock_qty = 0;
+                    $data['food_menus'][$key]->stock_unit = '';
+                }
             }
         }
         $data['denominations'] = $this->Common_model->getDenomination($company_id);
@@ -470,6 +542,65 @@ class Sale extends Cl_Controller {
             ->order_by('tbl_ingredients.name', 'ASC')
             ->get()->result();
         $this->load->view('sale/POS/main_screen', $data);
+    }
+
+    /**
+     * Get live stock of all pre-made food items for POS via AJAX
+     * @access public
+     * @return json
+     */
+    public function get_premade_stocks_ajax() {
+        $company_id = $this->session->userdata('company_id');
+        $outlet_id = $this->session->userdata('outlet_id');
+        if (!$company_id || !$outlet_id) {
+            echo json_encode(array('status' => 'error', 'stocks' => (object)array()));
+            return;
+        }
+
+        $premade_stocks = $this->db->query("
+            SELECT 
+                fmi.food_menu_id,
+                i.id as ingredient_id,
+                i.code as ingredient_code,
+                i.conversion_rate,
+                u.unit_name,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_purchase_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_purchase,
+                (SELECT COALESCE(SUM(consumption), 0) FROM tbl_sale_consumptions_of_menus WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption,
+                (SELECT COALESCE(SUM(consumption), 0) FROM tbl_sale_consumptions_of_modifiers_of_menus WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_modifiers_consumption,
+                (SELECT COALESCE(SUM(waste_amount), 0) FROM tbl_waste_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live') as total_waste,
+                (SELECT COALESCE(SUM(consumption_amount), 0) FROM tbl_inventory_adjustment_ingredients WHERE ingredient_id = i.id AND consumption_status = 'Plus' AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption_plus,
+                (SELECT COALESCE(SUM(consumption_amount), 0) FROM tbl_inventory_adjustment_ingredients WHERE ingredient_id = i.id AND consumption_status = 'Minus' AND outlet_id = $outlet_id AND del_status = 'Live') as total_consumption_minus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_production_ingredients WHERE ingredient_id = i.id AND outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_production,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_ingredients WHERE ingredient_id = i.id AND to_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1 AND transfer_type = 1) as total_transfer_plus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_ingredients WHERE ingredient_id = i.id AND from_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1 AND transfer_type = 1) as total_transfer_minus,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_received_ingredients WHERE ingredient_id = i.id AND to_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_transfer_plus_2,
+                (SELECT COALESCE(SUM(quantity_amount), 0) FROM tbl_transfer_received_ingredients WHERE ingredient_id = i.id AND from_outlet_id = $outlet_id AND del_status = 'Live' AND status = 1) as total_transfer_minus_2
+            FROM tbl_ingredients i
+            LEFT JOIN tbl_food_menus_ingredients fmi ON fmi.ingredient_id = i.id AND fmi.del_status = 'Live'
+            LEFT JOIN tbl_units u ON u.id = i.unit_id
+            WHERE i.company_id = $company_id 
+              AND i.del_status = 'Live' 
+              AND i.ing_type = 'Pre-made Item'
+        ")->result();
+
+        $stocks = array();
+        if (!empty($premade_stocks)) {
+            foreach ($premade_stocks as $pms) {
+                $conv = ($pms->conversion_rate > 0) ? (float)$pms->conversion_rate : 1;
+                $total_in = ((float)$pms->total_purchase + (float)$pms->total_production + (float)$pms->total_transfer_plus + (float)$pms->total_transfer_plus_2) * $conv + (float)$pms->total_consumption_plus;
+                $total_out = (float)$pms->total_consumption + (float)$pms->total_modifiers_consumption + (float)$pms->total_waste + (float)$pms->total_consumption_minus + (((float)$pms->total_transfer_minus + (float)$pms->total_transfer_minus_2) * $conv);
+                $live_stock = $total_in - $total_out;
+
+                if (!empty($pms->food_menu_id)) {
+                    $stocks[(string)$pms->food_menu_id] = array(
+                        'stock_qty' => round($live_stock, 2),
+                        'stock_unit' => $pms->unit_name ? $pms->unit_name : 'pcs',
+                        'ingredient_id' => $pms->ingredient_id
+                    );
+                }
+            }
+        }
+        echo json_encode(array('status' => 'success', 'stocks' => $stocks));
     }
      /**
      * get Tables Details

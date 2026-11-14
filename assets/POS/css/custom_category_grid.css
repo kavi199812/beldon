@@ -145,6 +145,38 @@
     flex-shrink: 0 !important;
 }
 
+/* ── Stock Badge for Pre-Made Items ── */
+#inline_product_grid .single_item .pos_stock_badge {
+    display: inline-block !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 2px 7px !important;
+    border-radius: 12px !important;
+    margin: 2px 0 4px 0 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.2px !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+#inline_product_grid .single_item .pos_stock_badge.pos_stock_in {
+    background: #e8f5e9 !important;
+    color: #1b5e20 !important;
+    border: 1px solid #a5d6a7 !important;
+}
+
+#inline_product_grid .single_item .pos_stock_badge.pos_stock_low {
+    background: #fff3e0 !important;
+    color: #e65100 !important;
+    border: 1px solid #ffcc80 !important;
+}
+
+#inline_product_grid .single_item .pos_stock_badge.pos_stock_out {
+    background: #ffebee !important;
+    color: #c62828 !important;
+    border: 1px solid #ef9a9a !important;
+}
+
 #inline_product_grid .single_item .item_price {
     display: block !important;
     width: 100% !important;
