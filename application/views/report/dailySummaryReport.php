@@ -99,7 +99,6 @@
                                 <td><?php echo escape_output(getAmtCustom($value->grand_total)); ?></td>
                                 <td><?php echo escape_output(getAmtCustom($value->paid)); ?></td>
                                 <td><?php echo escape_output(getAmtCustom($value->due)); ?></td>
-                                <td><?php echo escape_output(getAmt($value->total_refund)); ?></td>
                             </tr>
                             <?php
                                     endforeach;
@@ -163,7 +162,7 @@
                                 <td><?php echo escape_output(getAmtCustom($value->total_discount_amount)); ?></td>
                                 <td><?php echo escape_output(getAmtCustom($value->paid_amount)); ?></td>
                                 <td><?php echo escape_output(getAmtCustom($value->due_amount)); ?></td>
-                                <td>&nbsp;<?php echo escape_output(getAmt($sum_of_total_refund)); ?></td>
+                                <td>&nbsp;<?php echo escape_output(getAmt($value->total_refund)); ?></td>
                             </tr>
                             <?php endforeach; endif; ?>
                             <tr>
