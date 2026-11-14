@@ -1696,17 +1696,35 @@ class Sale_model extends CI_Model {
      * @param int
      * @param int
      */
-    public function make_query($outlet_id){
+    public function make_query($outlet_id, $filter_date = ''){
         $this->db->select("tbl_sales.*,tbl_users.full_name,tbl_customers.name as customer_name,tbl_payment_methods.name,tbl_customers.phone as customer_phone");
         $this->db->from('tbl_sales');
         $this->db->join('tbl_customers', 'tbl_customers.id = tbl_sales.customer_id', 'left');
         $this->db->join('tbl_users', 'tbl_users.id = tbl_sales.user_id', 'left');
         $this->db->join('tbl_payment_methods', 'tbl_payment_methods.id = tbl_sales.payment_method_id', 'left');
-        if($_POST["search"]["value"]) {
+        
+        if (!$filter_date) {
+            if (isset($_POST['filter_date']) && $_POST['filter_date']) {
+                $filter_date = trim($_POST['filter_date']);
+            } elseif ($this->input->get('filter_date')) {
+                $filter_date = trim($this->input->get('filter_date'));
+            } elseif ($this->input->get('date')) {
+                $filter_date = trim($this->input->get('date'));
+            } elseif ($this->session->userdata('sale_filter_date')) {
+                $filter_date = trim($this->session->userdata('sale_filter_date'));
+            }
+        }
+        if ($filter_date) {
+            $this->db->where("tbl_sales.sale_date", $filter_date);
+        }
+
+        if(isset($_POST["search"]["value"]) && $_POST["search"]["value"]) {
+            $this->db->group_start();
             $this->db->like("sale_no",$_POST["search"]["value"]);
             $this->db->or_like("tbl_customers.name",$_POST["search"]["value"]);
             $this->db->or_like("tbl_customers.phone",$_POST["search"]["value"]);
             $this->db->or_like("tbl_users.full_name",$_POST["search"]["value"]);
+            $this->db->group_end();
         }
         $this->db->where("tbl_sales.outlet_id", $outlet_id);
         $this->db->where("tbl_sales.order_status", '3');
@@ -1721,9 +1739,9 @@ class Sale_model extends CI_Model {
      * @param int
      * @param int
      */
-    public function make_datatables($outlet_id){
-        $this->make_query($outlet_id);
-        if($_POST["length"]!=-1){
+    public function make_datatables($outlet_id, $filter_date = ''){
+        $this->make_query($outlet_id, $filter_date);
+        if(isset($_POST["length"]) && $_POST["length"]!=-1){
             $this->db->limit($_POST["length"],$_POST["start"]);
         }
         return $this->db->get()->result();
@@ -1734,7 +1752,7 @@ class Sale_model extends CI_Model {
      * @param string
      */
     public function getDrawData(){
-        return $_POST["draw"];
+        return isset($_POST["draw"]) ? $_POST["draw"] : 1;
     }
     /**
      * filtered the ajax datatable
@@ -1744,8 +1762,8 @@ class Sale_model extends CI_Model {
      * @param int
      * @param int
      */
-    public function get_filtered_data($outlet_id){
-        $this->make_query($outlet_id);
+    public function get_filtered_data($outlet_id, $filter_date = ''){
+        $this->make_query($outlet_id, $filter_date);
         $result = $this->db->get();
         return $result->num_rows();
     }
@@ -1757,9 +1775,23 @@ class Sale_model extends CI_Model {
      * @param int
      * @param int
      */
-    public function get_all_data($outlet_id){
+    public function get_all_data($outlet_id, $filter_date = ''){
         $this->db->select("*");
         $this->db->from('tbl_sales');
+        if (!$filter_date) {
+            if (isset($_POST['filter_date']) && $_POST['filter_date']) {
+                $filter_date = trim($_POST['filter_date']);
+            } elseif ($this->input->get('filter_date')) {
+                $filter_date = trim($this->input->get('filter_date'));
+            } elseif ($this->input->get('date')) {
+                $filter_date = trim($this->input->get('date'));
+            } elseif ($this->session->userdata('sale_filter_date')) {
+                $filter_date = trim($this->session->userdata('sale_filter_date'));
+            }
+        }
+        if ($filter_date) {
+            $this->db->where("tbl_sales.sale_date", $filter_date);
+        }
         $this->db->where("outlet_id", $outlet_id);
         $this->db->where("order_status", '3');
         $this->db->where("del_status", "Live");

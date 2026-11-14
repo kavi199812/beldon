@@ -1,5 +1,14 @@
 <link rel="stylesheet" href="<?php echo base_url(); ?>assets/dist/css/custom/report.css">
 <style>
+tr.daily-sale-row {
+    transition: background-color 0.15s ease-in-out;
+}
+tr.daily-sale-row:hover {
+    background-color: #f7f6fd !important;
+}
+tr.daily-sale-row:hover .daily-date-link {
+    text-decoration: underline !important;
+}
 .quick-date-btn {
     height: 38px;
     padding: 0 14px;
@@ -219,6 +228,7 @@
                             <th><?php echo lang('date'); ?></th>
                             <th><?php echo lang('total_sale'); ?></th>
                             <th><?php echo lang('total_refund'); ?></th>
+                            <th class="ir_txt_center not-export-col"><?php echo lang('actions'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,13 +240,25 @@
                                 $grandTotal += (float)$value->total_payable;
                                 $grandRefund += (float)$value->total_refund;
                                 $key++;
+                                $sale_target_url = base_url() . 'Sale/sales?date=' . $value->sale_date;
                                 ?>
-                        <tr>
+                        <tr class="daily-sale-row" data-href="<?php echo $sale_target_url; ?>" style="cursor: pointer;" title="Click to view sales for <?= escape_output(date($this->session->userdata('date_format'), strtotime($value->sale_date))) ?>">
                             <td class="ir_txt_center"><?php echo escape_output($key); ?></td>
-                            <td><?= escape_output(date($this->session->userdata('date_format'), strtotime($value->sale_date))) ?>
+                            <td>
+                                <a href="<?php echo $sale_target_url; ?>" class="daily-date-link" style="font-weight: 600; color: #7367f0; text-decoration: none;">
+                                    <?= escape_output(date($this->session->userdata('date_format'), strtotime($value->sale_date))) ?>
+                                </a>
                             </td>
-                            <td><?php echo escape_output(getAmtCustom($value->total_payable)) ?></td>
+                            <td><strong><?php echo escape_output(getAmtCustom($value->total_payable)) ?></strong></td>
                             <td><?php echo escape_output(getAmt($value->total_refund)) ?></td>
+                            <td class="ir_txt_center">
+                                <a href="<?php echo $sale_target_url; ?>" 
+                                   class="btn btn-sm" 
+                                   style="background-color: #7367f0; color: #fff !important; border-radius: 4px; padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;"
+                                   title="View sales list for this day">
+                                    <i class="fa fa-list"></i> View Sales
+                                </a>
+                            </td>
                         </tr>
                         <?php
                             }
@@ -250,6 +272,7 @@
                             <th><strong>Total</strong></th>
                             <th><strong><?php echo escape_output(getAmtCustom($grandTotal)); ?></strong></th>
                             <th><strong><?php echo escape_output(getAmt($grandRefund)); ?></strong></th>
+                            <th></th>
                         </tr>
                     </tfoot>
                     <?php endif; ?>
@@ -303,5 +326,15 @@
                 autoclose: true
             });
         }
+
+        $(document).on('click', '#datatable tbody tr.daily-sale-row', function(e) {
+            if ($(e.target).closest('a, button').length) {
+                return;
+            }
+            var href = $(this).attr('data-href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
     });
 </script>

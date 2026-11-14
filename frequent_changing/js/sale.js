@@ -12,7 +12,8 @@ $(function () {
           url: base_url + "Sale/getAjaxData",
           type: "POST",
           dataType: "json",
-          data: {
+          data: function(d) {
+              d.filter_date = $("#filter_date").val() || (typeof salePageFilterDate !== 'undefined' ? salePageFilterDate : "");
           },
       },
       columnDefs: [

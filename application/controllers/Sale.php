@@ -99,6 +99,22 @@ class Sale extends Cl_Controller {
 
         $outlet_id = $this->session->userdata('outlet_id');
         $data = array();
+
+        if ($this->input->get('clear_filter') == '1') {
+            $this->session->unset_userdata('sale_filter_date');
+            $filter_date = '';
+        } elseif ($this->input->get('date') !== null && $this->input->get('date') !== '') {
+            $filter_date = trim($this->input->get('date'));
+            $this->session->set_userdata('sale_filter_date', $filter_date);
+        } elseif ($this->uri->segment(3) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->uri->segment(3))) {
+            $filter_date = trim($this->uri->segment(3));
+            $this->session->set_userdata('sale_filter_date', $filter_date);
+        } else {
+            $this->session->unset_userdata('sale_filter_date');
+            $filter_date = '';
+        }
+
+        $data['filter_date'] = $filter_date;
         $data['main_content'] = $this->load->view('sale/sales', $data, TRUE);
         $this->load->view('userHome', $data);
     }
@@ -4000,7 +4016,19 @@ We hope to see you again!";
     public function getAjaxData() {
         try {
             $outlet_id = $this->session->userdata('outlet_id');
-            $sales = $this->Sale_model->make_datatables($outlet_id);
+
+            $filter_date = '';
+            if (isset($_POST['filter_date']) && $_POST['filter_date']) {
+                $filter_date = trim($_POST['filter_date']);
+            } elseif ($this->input->get('filter_date')) {
+                $filter_date = trim($this->input->get('filter_date'));
+            } elseif ($this->input->get('date')) {
+                $filter_date = trim($this->input->get('date'));
+            } elseif ($this->session->userdata('sale_filter_date')) {
+                $filter_date = trim($this->session->userdata('sale_filter_date'));
+            }
+
+            $sales = $this->Sale_model->make_datatables($outlet_id, $filter_date);
             $data = array();
 
             if ($sales && !empty($sales)) {
@@ -4084,8 +4112,8 @@ We hope to see you again!";
 
             $output = array(
                 "draw" => intval($this->Sale_model->getDrawData()),
-                "recordsTotal" => $this->Sale_model->get_all_data($outlet_id),
-                "recordsFiltered" => $this->Sale_model->get_filtered_data($outlet_id),
+                "recordsTotal" => $this->Sale_model->get_all_data($outlet_id, $filter_date),
+                "recordsFiltered" => $this->Sale_model->get_filtered_data($outlet_id, $filter_date),
                 "data" => $data
             );
             echo json_encode($output);

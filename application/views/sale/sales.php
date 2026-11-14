@@ -9,6 +9,7 @@
 <input type="hidden" id="change_delivery_address" value="<?php echo getPOSChecker("123","change_delivery_address"); ?>">
 <input type="hidden" id="menu_not_permit_access" value="<?php echo lang('menu_not_permit_access'); ?>">
 <input type="hidden" id="status_changed_successfully" value="<?php echo lang('status_changed_successfully'); ?>">
+<input type="hidden" id="filter_date" value="<?php echo isset($filter_date) && $filter_date ? escape_output($filter_date) : ''; ?>">
 <section class="main-content-wrapper">
 
     <?php
@@ -23,27 +24,21 @@ if ($this->session->flashdata('exception')) {
 ?>
     <section class="content-header">
         <div class="row">
-            <div class="col-sm-12 col-md-8">
+            <div class="col-sm-12 col-md-10">
                 <h2 class="top-left-header"><?php echo lang('sale'); ?> </h2>
             </div>
             <?php if(isServiceAccessOnlyLogin('sGmsJaFJE')): ?>
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-2">
 
             </div>
                 <?php else:
                 $export_daily_sale = $this->session->userdata('export_daily_sale');
                 if($export_daily_sale && $export_daily_sale=="enable"): ?>
-            <div class="col-md-2">
+            <div class="col-md-2 text-end">
                 <a href="<?php echo base_url() ?>Sale/exportDailySales"  data-access="exportDailySales-123" class="btn_list m-right btn bg-blue-btn delete menu_assign_class"><?php echo lang('exportDailySales'); ?></a>
             </div>
-            <div class="col-md-2">
-                <a href="<?php echo base_url() ?>Sale/resetDailySales"  data-access="resetDailySales-123" class="btn_list m-right btn bg-blue-btn delete menu_assign_class"><?php echo lang('resetDailySales'); ?></a>
-            </div>
-            <div class="col-md-2">
-
-            </div>
             <?php else: ?>
-            <div class="col-md-offset-4 col-md-2">
+            <div class="col-md-2">
 
             </div>
 
@@ -52,6 +47,17 @@ if ($this->session->flashdata('exception')) {
     </section>
 
     <div class="box-wrapper">
+        <?php if(isset($filter_date) && $filter_date): ?>
+        <div class="alert py-2 px-3 mb-3 d-flex justify-content-between align-items-center" style="background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 6px;">
+            <div style="font-size: 14px; font-weight: 500;">
+                <i class="fa fa-calendar mr-2" style="font-size: 15px;"></i>
+                Showing sales for: <strong><?php echo escape_output(date($this->session->userdata('date_format'), strtotime($filter_date))); ?></strong>
+            </div>
+            <a href="<?php echo base_url(); ?>Sale/sales?clear_filter=1" class="btn btn-sm btn-danger" style="border-radius: 4px; font-size: 12px; padding: 4px 12px; text-decoration: none; color: #fff;">
+                <i class="fa fa-times mr-1"></i> View All Sales
+            </a>
+        </div>
+        <?php endif; ?>
         <div class="table-box">
             <!-- /.box-header -->
             <div class="table-responsive">
@@ -218,4 +224,7 @@ if ($this->session->flashdata('exception')) {
 <script src="<?php echo base_url(); ?>frequent_changing/newDesign/js/forTable.js"></script>
 
 <script type="text/javascript" src="<?php echo base_url(); ?>assets/POS/js/jquery.cookie.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>frequent_changing/js/sale.js"></script>
+<script>
+var salePageFilterDate = '<?php echo isset($filter_date) && $filter_date ? escape_output($filter_date) : ''; ?>';
+</script>
+<script type="text/javascript" src="<?php echo base_url(); ?>frequent_changing/js/sale.js?v=<?php echo time(); ?>"></script>
